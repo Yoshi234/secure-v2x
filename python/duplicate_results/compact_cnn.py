@@ -43,7 +43,7 @@ class Batchlayer(torch.nn.Module):
 #torch.nn.Module: base class for all neural network modules
 class compact_cnn(torch.nn.Module):
     """
-     The codes implement the CNN model proposed in the paper "A Compact and Interpretable Convolutional Neural Network for-
+    The codes implement the CNN model proposed in the paper "A Compact and Interpretable Convolutional Neural Network for-
     Cross-Subject Driver Drowsiness Detection from Single-Channel EEG ".
     
     The network is designed to classify 1D drowsy and alert EEG signals for the purposed of driver drowsiness recognition.
@@ -62,21 +62,32 @@ class compact_cnn(torch.nn.Module):
         #kernel_size specifies the height and width of the convolution windows (1 by kernelLength here)
         self.conv = torch.nn.Conv2d(in_channels=1, out_channels=channels, kernel_size=(1,kernelLength))
         self.batch = Batchlayer(channels)
+        # the shape of the average pooling layer is (1, 384-64+1=321) --> condenses it to 
         self.GAP = torch.nn.AvgPool2d((1, sampleLength- kernelLength + 1))
+        # the linear layers map 32 input features to 2 output features (drowy and nondrowsy)
         self.fc = torch.nn.Linear(channels, classes)
         self.softmax = torch.nn.LogSoftmax(dim = 1)
 
     def forward(self, inputdata):
         #what is this nonsense with the self.conv() stuff? 
+        # input.shape = [314, 1, 1, 384]
         intermediate = self.conv(inputdata)
+        # intermediate.shape = [314, 32, 1, 321]
         intermediate = self.batch(intermediate)
+        # intermediate.shape = [314, 32, 1, 321]
         # compare the performance of the compactCNN with ReLU
         # versus with ELU function
-        # intermediate = torch.nn.ReLU()(intermediate)
+        # intermediate = torch.nn.ELU()(intermediate)
         intermediate = torch.nn.ReLU()(intermediate)
+        # intermediate.shape = [314, 32, 1, 321]
         intermediate = self.GAP(intermediate)
+        # intermediate.shape = [314, 32, 1, 1]
+        # this is just a reshape layer before the fully connected layer
+        # squeezes the data into a matrix (314, 32) from (314, 32, 1, 1)
         intermediate = intermediate.view(intermediate.size()[0], -1)
+        # intermediate.shape = [314, 32]
         intermediate = self.fc(intermediate)
+        # intermediate.shape = [314, 2]
         output = self.softmax(intermediate)
 
         return output

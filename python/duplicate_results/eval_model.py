@@ -95,6 +95,9 @@ def eval_model(model_name, subj_num):
         f.write(f"\n")
 
 if __name__ == "__main__":
+    print("pretrained torch models are located at ../pretrained_torch_models/file.pth relative to this file")
     model_name = input("Please enter model name ('ELU' or 'relu'): ")
     subj_num = int(input("Please input the subject number: "))
+    import os
+    os.system('pwd')
     eval_model(model_name, subj_num) 
