@@ -24,3 +24,8 @@ experiment_averages4.txt - averages for trianing of model on different random se
 experiment_averages5.txt - averages for training of model on different random seeds until the percent difference between average accuracy for sequential trials is below 0.5 percent for 20 trials in a row
 
 experiment_averages6.txt - averages for training of model on different random seeds until the percent difference between average accuracy for sequential trials is below 0.1 percent for 20 trials in a row
+
+6. Parameters Files: 
+contains the parameters and their names loaded from the pth format (model state dict)
+
+7. `\pretrained_numpy_models` contains the pretrained numpy weights and parameters of the models trained in python
