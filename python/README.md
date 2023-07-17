@@ -28,4 +28,11 @@ experiment_averages6.txt - averages for training of model on different random se
 6. Parameters Files: 
 contains the parameters and their names loaded from the pth format (model state dict)
 
-7. `\pretrained_numpy_models` contains the pretrained numpy weights and parameters of the models trained in python
+7. `\pretrained_numpy_models` 
+contains the pretrained numpy weights and parameters of the models trained in python
+
+8. `\no_batch-norm`
+contains results of accuracy experiments when the model is trained and run without using batch normalization to center the weights of the model. This folder also contains the .pth file each model used for the experiment. The models were trained on the seed '1'
+The file "experiment_results.txt" in this folder shows the results of the experiment, and the accuracy difference between the two runs
+"experiment_results_2.txt" corresponds to the run where I used the seed '0' instead of seed '1' to see if a difference could be observed
+
