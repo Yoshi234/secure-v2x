@@ -40,6 +40,10 @@ io-utils = { git = "https://github.com/ryanleh/io-utils", branch = "main" }
 name = "experiments"
 path = "src/lib.rs"
 
+[[bin]] 
+name = "compact-cnn-inference"
+path = "src/inference/compactCNN/inference.rs"
+
 [[bin]]
 name = "minionn-inference"
 path = "src/inference/minionn/inference.rs"

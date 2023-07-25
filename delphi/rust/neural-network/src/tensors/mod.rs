@@ -14,6 +14,10 @@ type Quadruple = (usize, usize, usize, usize);
 ndarray_impl!(Input, Array4, Quadruple);
 ndarray_impl!(Kernel, Array4, Quadruple);
 
+// here is the initial definition statement for "Input<F>"
+// and "Output<F>"
+
+// the type syntax just declares an alias for an existng type  
 pub type Output<F> = Input<F>;
 
 impl<T: Share> Input<T> {

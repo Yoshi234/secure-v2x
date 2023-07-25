@@ -3,6 +3,9 @@
 #link to reference help: https://pytorch.org/tutorials/beginner/basics/saveloadrun_tutorial.html#:~:text=Saving%20and%20Loading%20Model%20Weights%20PyTorch%20models%20store,the%20torch.save%20method%3A%20model%20%3D%20models.vgg16%28pretrained%3DTrue%29%20torch.save%28model.state_dict%28%29%2C%20%27model_weights.pth%27%29
 
 #there is a similar method for saving a trained model in pytorch
+import sys
+sys.path.append("models")
+sys.path.append("pretrained_numpy_models")
 import torch
 import numpy as np
 from compact_cnn import compact_cnn
@@ -26,7 +29,8 @@ def extract_weights(model_dict, file_handle):
     params = torch.cat(params)
     #convert the tensor into a NumPy array
     model_weights = params.cpu().detach().numpy()
-    np.save(f'/home/jjl20011/snap/snapd-desktop-integration/current/Lab/python/pretrained_numpy_models/compactCNN_seed4_subj9.npy', model_weights.astype(np.float64))
+    print(sys.path)
+    np.save(f'pretrained_numpy_models/compact_cnn_no_batch_norm_seed0_subj9.npy', model_weights.astype(np.float64))
 
 def main():
     torch_model_file_handle = input("please input the torch model file path (from wd) excluding the extension: ")

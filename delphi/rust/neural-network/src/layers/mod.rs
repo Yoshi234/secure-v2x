@@ -5,6 +5,8 @@ use crate::{
 use num_traits::{One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign};
 
+// added batch_norm module link here 7/19/23
+mod batch_norm;
 mod linear;
 mod non_linear;
 

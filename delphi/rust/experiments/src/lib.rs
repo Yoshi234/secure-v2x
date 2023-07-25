@@ -284,7 +284,6 @@ fn sample_avg_pool_layer(
     }
 }
 
-// non-linear activation function for softmax
 fn add_softmax_layer(nn: &mut NeuralNetwork<TenBitAS, TenBitExpFP>, softmax_layers: &[usize]) {
 }
 

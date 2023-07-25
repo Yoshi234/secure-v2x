@@ -37,6 +37,7 @@ class Batchlayer(torch.nn.Module):
         gammamatrix = self.gamma.expand(int(data.size(0)), int(data.size(1)), int(data.size(2)), int(data.size(3)))
         betamatrix = self.beta.expand(int(data.size(0)), int(data.size(1)), int(data.size(2)), int(data.size(3)))
 
+        # element-wise multiplication of data + sum betamatrix
         return data * gammamatrix + betamatrix
 
 

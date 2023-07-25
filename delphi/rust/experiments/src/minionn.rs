@@ -1,5 +1,3 @@
-//bring necessary packages into scope for rust
-//where is this neural_network package coming from?
 use ::neural_network as nn;
 use nn::{
     layers::{convolution::Padding, Layer},
@@ -7,27 +5,12 @@ use nn::{
 };
 use rand::{CryptoRng, RngCore};
 
-//what is this import statement?
 use super::*;
 
-//this construct_minionnn function returns a 
-//NeuralNetwork<TenBitAS, TenBitExpFP>
-//what is the RngCore + CryptoRng statement doing?
-
-//this is called 'trait bound syntax'
 pub fn construct_minionn<R: RngCore + CryptoRng>(
-    //initialize a bunch of parameters
-    //don't know what this vs: thing is
-    //vs is an 'Option<&tch::nn::Path> --> the tch thin is a dependency
-    //included in the Cargo.toml file for this crate
-    //vs can either be a reference to a tch::nn::Path type, or None
     vs: Option<&tch::nn::Path>,
     batch_size: usize,
-    //set number of polynomial approximations for the network
     num_poly: usize,
-    //I don't understand what R is - R implements the RngCore and CryptoRng traits
-    //for the function? R is just a generic type which implements the RngCore
-    //and CryptoRng traits
     rng: &mut R,
 ) -> NeuralNetwork<TenBitAS, TenBitExpFP> {
     let relu_layers = match num_poly {
@@ -41,7 +24,6 @@ pub fn construct_minionn<R: RngCore + CryptoRng>(
         _ => unreachable!(),
     };
 
-    //network code / definition
     let mut network = match &vs {
         Some(vs) => NeuralNetwork {
             layers: vec![],
@@ -84,7 +66,7 @@ pub fn construct_minionn<R: RngCore + CryptoRng>(
     add_activation_layer(&mut network, &relu_layers);
     // 6
     let input_dims = network.layers.last().unwrap().output_dimensions();
-    let a = sample_avg_pool_layer(input_dims, (2, 2), 2);
+    let pool = sample_avg_pool_layer(input_dims, (2, 2), 2);
     network.layers.push(Layer::LL(pool));
     // 7
     let input_dims = network.layers.last().unwrap().output_dimensions();
@@ -112,4 +94,3 @@ pub fn construct_minionn<R: RngCore + CryptoRng>(
 
     network
 }
-   

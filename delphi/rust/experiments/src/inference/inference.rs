@@ -26,6 +26,7 @@ pub fn softmax(x: &Input<TenBitExpFP>) -> Input<TenBitExpFP> {
     return e_x;
 }
 
+// we will implement the batch normalization pre-processing step here
 pub fn run(
     network: NeuralNetwork<TenBitAS, TenBitExpFP>,
     architecture: NeuralArchitecture<TenBitAS, TenBitExpFP>,

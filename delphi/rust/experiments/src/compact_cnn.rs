@@ -19,14 +19,15 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     vs: Option<&tch::nn::Path>,
     batch_size: usize,
     // not utilizing any 
+    num_poly: usize, 
     rng: &mut R,
-) -> NeuralNetwork<TenBitAs, TenBitExpFP> {
+) -> NeuralNetwork<TenBitAS, TenBitExpFP> {
     // no approximations for the relu_layer
     // there is only one layer in the compact_cnn to approximate
     let relu_layers = match num_poly {
         0 => vec![1],
         1 => vec![],
-        _ => unreachable(),
+        _ => unreachable!(),
     };
     // network code / definition 
     let mut network = match &vs {
@@ -65,7 +66,7 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     // Do we need to construct a separate GAP function for Delphi as well?
     // the window is 1, and the stride is 384
     let input_dims = network.layers.last().unwrap().output_dimensions();
-    let a = sample_avg_pool_layer(input_dims, (1, 1), 384);
+    let pool = sample_avg_pool_layer(input_dims, (1, 1), 384);
     network.layers.push(Layer::LL(pool));
 
     // 6 (FULLY CONNECTED LAYER)
