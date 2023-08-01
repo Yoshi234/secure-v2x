@@ -7,7 +7,7 @@ use crypto_primitives::AdditiveShare;
 use num_traits::{One, Zero};
 use std::{
     marker::PhantomData,
-    ops::{AddAssign, Mul},
+    ops::{AddAssign, Mul, Add},
 };
 use tch::nn::Module;
 
@@ -16,6 +16,9 @@ use LinearLayer::*;
 
 pub mod convolution;
 use convolution::*;
+
+pub mod batch_norm;
+use batch_norm::*;
 
 pub mod average_pooling;
 use average_pooling::*;
@@ -43,8 +46,17 @@ pub enum LinearLayer<F, C> {
     Identity {
         dims: LayerDims,
     },
+    // added a batchnorm enum for the linear layer
+    BatchNorm {
+        dims: LayerDims,
+        params: BatchNormParams<F, C>,
+    }
 }
 
+/// What is the purpose of this `LinearLayerInfo<F, C>` enum?
+/// - Batch Norm
+///     - to reduce ecomplexity, I literally just copied the parameters
+///     - then I can just directly input these for the `LinearLayerInfo::BatchNorm.evaluate_naive` function
 #[derive(Debug, Clone)]
 pub enum LinearLayerInfo<F, C> {
     Conv2d {
@@ -61,6 +73,9 @@ pub enum LinearLayerInfo<F, C> {
         _variable: PhantomData<F>,
     },
     Identity,
+    BatchNorm {
+        params: BatchNormParams<F, C>,
+    }
 }
 
 impl<F, C> LinearLayer<F, C> {
@@ -69,7 +84,8 @@ impl<F, C> LinearLayer<F, C> {
             Conv2d { dims, .. }
             | FullyConnected { dims, .. }
             | AvgPool { dims, .. }
-            | Identity { dims, .. } => *dims,
+            | Identity { dims, .. }
+            | BatchNorm { dims, ..}  => *dims,
         }
     }
 
@@ -81,6 +97,7 @@ impl<F, C> LinearLayer<F, C> {
         self.dimensions().output_dimensions()
     }
 
+    /// Generate all_dimensions of the input `LinearLayer` enum
     pub fn all_dimensions(
         &self,
     ) -> (
@@ -93,6 +110,8 @@ impl<F, C> LinearLayer<F, C> {
         let kernel_dims = match self {
             Conv2d { dims: _, params: p } => p.kernel.dim(),
             FullyConnected { dims: _, params: p } => p.weights.dim(),
+            // BatchNorm betas and gammas have the same dimensions
+            BatchNorm { dims: _, params: p } => p.gammas.dim(),
             _ => panic!("Identity/AvgPool layers do not have a kernel"),
         };
         (input_dims, output_dims, kernel_dims)
@@ -122,7 +141,7 @@ impl<F, C> LinearLayer<F, C> {
 
     fn evaluate_naive(&self, input: &Input<F>, output: &mut Output<F>)
     where
-        F: Zero + Mul<C, Output = F> + AddAssign + Copy,
+        F: Zero + Mul<C, Output = F> + AddAssign + Copy + Add<C, Output=F>,
         C: Copy + Into<F> + One + std::fmt::Debug,
     {
         match self {
@@ -137,6 +156,9 @@ impl<F, C> LinearLayer<F, C> {
                 for elem in output.iter_mut() {
                     *elem = *elem * one;
                 }
+            }
+            BatchNorm { dims: _, params: p } => {
+                p.batch_norm_naive(input, output);
             }
         }
     }
@@ -153,7 +175,7 @@ impl<F, C> LinearLayer<F, C> {
 
 impl<F, C> Evaluate<F> for LinearLayer<F, C>
 where
-    F: Zero + Mul<C, Output = F> + AddAssign + Copy,
+    F: Zero + Mul<C, Output = F> + AddAssign + Copy + Add<C, Output=F>,
     C: Copy + Into<F> + One + std::fmt::Debug,
 {
     fn evaluate(&self, input: &Input<F>) -> Output<F> {
@@ -211,6 +233,7 @@ where
             EvalMethod::Naive => self.evaluate_naive(input, &mut output),
             EvalMethod::TorchDevice(m) => {
                 match self {
+                    // if the enum on which the function is being called is Conv2d then use the tch version of the function
                     Conv2d { dims: _, params: p } => {
                         let conv2d = &p.tch_config;
                         // Send the tensor to the appropriate PyTorch device
@@ -242,6 +265,9 @@ where
     <P::Field as PrimeField>::Params: Fp64Parameters,
     P::Field: PrimeField<BigInt = <<P::Field as PrimeField>::Params as FpParameters>::BigInt>,
 {
+    /// the output of this version of `evaluate_with_method` outputs 
+    /// `Output<FixedPoint<P>>` instead of `Output<AdditiveShare<FixedPoint<..>>>` for 
+    /// evaluating Conv2D. This is because the input is different as well
     fn evaluate_with_method(
         &self,
         method: EvalMethod,
@@ -277,10 +303,14 @@ where
 }
 
 impl<F, C> LinearLayerInfo<F, C> {
+    /// Why do I need to implement for AvgPool and for BatchNorm but NOT for 
+    /// the convolutional layer? What's different. Does it have to do with 
+    /// the preprocessing step being unecessary for these layers. I think
+    /// I saw something about that being the case elsewhere in the code
     pub fn evaluate_naive(&self, input: &Input<F>, output: &mut Output<F>)
     where
-        F: Zero + Mul<C, Output = F> + AddAssign + Copy,
-        C: Copy + One + std::fmt::Debug,
+        F: Zero + Mul<C, Output = F> + AddAssign + Copy + Add<C, Output=F>,
+        C: Copy + One + std::fmt::Debug + Into<F>,
     {
         match self {
             LinearLayerInfo::AvgPool {
@@ -300,12 +330,21 @@ impl<F, C> LinearLayerInfo<F, C> {
                     *elem = *elem * one;
                 }
             }
+            // need the gammas and betas enums to be there, the rest I don't really care about
+            LinearLayerInfo::BatchNorm {
+                params
+            } => {
+                let params = BatchNormParams::new(*gammas, *betas);
+                params.batch_norm_naive(input, output)
+            }
             _ => unreachable!(),
         }
     }
 }
 
 impl<'a, F, C: Clone> From<&'a LinearLayer<F, C>> for LinearLayerInfo<F, C> {
+    /// Converts a `LinearLayer` enum into `LinearLayerInfo` enum 
+    /// with the specified parameters
     fn from(other: &'a LinearLayer<F, C>) -> Self {
         match other {
             LinearLayer::Conv2d { params, .. } => LinearLayerInfo::Conv2d {
@@ -322,6 +361,10 @@ impl<'a, F, C: Clone> From<&'a LinearLayer<F, C>> for LinearLayerInfo<F, C> {
                 _variable: std::marker::PhantomData,
             },
             LinearLayer::Identity { .. } => LinearLayerInfo::Identity,
+            LinearLayer::BatchNorm { params, .. } => LinearLayerInfo::BatchNorm {
+                gammas: params.gammas,
+                betas: params.betas,
+            }
         }
     }
 }

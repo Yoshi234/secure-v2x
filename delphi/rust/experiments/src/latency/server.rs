@@ -65,8 +65,9 @@ fn cg_helper<R: RngCore + CryptoRng>(
                             rng,
                         )
                         .unwrap()
-                    }
+                    }      
                     // AvgPool and Identity don't require an offline phase
+                    LinearLayer::BatchNorm { dims, .. } => Output::zeros(dims.output_dimensions()),
                     LinearLayer::AvgPool { dims, .. } => Output::zeros(dims.output_dimensions()),
                     LinearLayer::Identity { dims } => Output::zeros(dims.output_dimensions()),
                 };

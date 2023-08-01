@@ -14,8 +14,14 @@ import torch
 
 #normalizelayer function definition for Batchlayer class
 def normalizelayer(data):
+    #epsilon is a very small number to prevent 0 division
     eps=1e-05
+    #compute the mean column-wise, and subtract it from the data --> expand so that you are subtracting a matrix with the same shape as data
+    #but each column value in the mean matrix, is an average of the given column. (keepdims=True)
+
+    #a_mean is the matrix of values after subtracting the mean for each column
     a_mean = data - torch.mean(data, [0,2,3], True).expand(int(data.size(0)), int(data.size(1)), int(data.size(2)), int(data.size(3)))
+    #normalize by dividing the standard deviation --> (square all values in the mean-normalized matrix, compute mean across columns, sum the eps) 
     b = torch.div(a_mean, torch.sqrt(torch.mean((a_mean)**2, [0,2,3], True) + eps).expand(int(data.size(0)), int(data.size(1)), int(data.size(2)), int(data.size(3))))
     return b
 
@@ -25,8 +31,11 @@ class Batchlayer(torch.nn.Module):
         super(Batchlayer, self).__init__()
         self.gamma=torch.nn.Parameter(torch.Tensor(1,dim,1,1))
         self.beta=torch.nn.Parameter(torch.Tensor(1,dim,1,1))
-        # random filling of the gamma / beta tensors with 
-        # values in uniform distribution from -0.1 to 0.1
+        #random filling of the gamma / beta tensors with 
+        #values in uniform distribution from -0.1 to 0.1
+
+        #define a normalizing parameter for the data
+        #self.normalizer=torch.nn.Parameter(torch.Tensor(1,1,1,1))
         self.gamma.data.uniform_(-0.1, 0.1)
         self.beta.data.uniform_(-0.1, 0.1)
 
@@ -34,11 +43,18 @@ class Batchlayer(torch.nn.Module):
         data=normalizelayer(input)
         #torch.Tensor.expand() returns view of self tensor with singleton dimensions
         #expanded to a larger size
+        #only in dimension 1 should anything be changed.
         gammamatrix = self.gamma.expand(int(data.size(0)), int(data.size(1)), int(data.size(2)), int(data.size(3)))
         betamatrix = self.beta.expand(int(data.size(0)), int(data.size(1)), int(data.size(2)), int(data.size(3)))
 
-        # element-wise multiplication of data + sum betamatrix
+        #this returns the normalized data multiplied by the gammamatrix
+        #and summed with the betamatrix
+        #element-wise multiplication of data + sum betamatrix
         return data * gammamatrix + betamatrix
+    
+    def set_normalizer(self):
+        #we want to update the normalizer parameter when the training process is finished
+        return
 
 
 #torch.nn.Module: base class for all neural network modules

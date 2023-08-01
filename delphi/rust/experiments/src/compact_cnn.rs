@@ -43,6 +43,7 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     // Dimensions of the input - tuple
     // tuple = (batch_size, num_channels, n_height, n_width)
     // tensor.shape = ([num_samples, 1, 1, 384])
+    println!("Beginning construction of compactcnn");
     let input_dims = (batch_size, 1, 1, 384);
 
     // 1 (lin - CONV LAYER)
@@ -56,6 +57,12 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     // ([num_samples, 32, 1, 321]) -> ([num_samples, 32, 1, 321])
     // TODO: Implement batch norm layer functionality for the neural network struct
     // Not sure how to do this at the moment
+    let input_dims = network.layers.last().unwrap().output_dimensions();
+    // future update --> implement the normalizer parameter to save mean/variance ratio from the 
+    // training set to normalize data during test time
+    // also utilize Ali's batch norm implementation for GPU system - tch vs (device selection)
+    let batch_layer = sample_batch_layer(input_dims, rng).0;
+    network.layers.push(Layer::LL(batch_layer));
 
     // 3 (nonlin - ReLU ACTIVATION LAYER)
     // ([num_samples, 32, 1, 321]) -> ([num_samples, 32, 1, 321])

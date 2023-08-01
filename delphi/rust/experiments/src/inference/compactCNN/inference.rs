@@ -13,6 +13,9 @@ const RANDOMNESS: [u8; 32] = [
     0x5d, 0xc9, 0x8d, 0xea, 0x23, 0xf2, 0x90, 0x8f, 0x9d, 0x03, 0xf2, 0x77, 0xd3, 0x4a, 0x52, 0xd2,
 ];
 
+/// Parses the arguments from the command line in delphi's style
+/// 
+/// `cargo +nightly run --bin compact-cnn-inference -- --weights folder/numpy_model.npy --layers num_approx_relus`
 fn get_args() -> ArgMatches<'static> {
     App::new("compact-cnn-inference")
         .arg(
@@ -34,6 +37,12 @@ fn get_args() -> ArgMatches<'static> {
         .get_matches()
 }
 
+/// `main()` runs the basic inference for CompactCNN with inputs taken from `get_args()`
+/// 
+/// - rng --> random value used for masking in security protocols
+/// - args --> gets arguments from cl
+/// - weights --> saved weights generated from the .npy model passed to inference
+/// - layers --> **DON'T KNOW** just specifies num relu approximations
 fn main() {
     let mut rng = ChaChaRng::from_seed(RANDOMNESS);
     let args = get_args();
@@ -48,7 +57,26 @@ fn main() {
 
     // Open EEG data and class
     let mut buf = vec![];
-    std::fs::File::open(Path::new(""))
+    std::fs::File::open(Path::new("eeg_class.npy"))
+        .unwrap()
+        .read_to_end(&mut buf)
+        .unwrap();
+    let class: i64 = NpyData::from_bytes(&buf).unwrap().to_vec()[0];
 
+    buf = vec![];
+    std::fs::File::open(Path::new("eeg_data.npy"))
+        .unwrap()
+        .read_to_end(&mut buf)
+        .unwrap();
+    let eeg_vec: Vec<f64> = NpyData::from_bytes(&buf).unwrap().to_vec();
+    let eeg_data = Array4::from_shape_vec((1, 1, 1, 384), eeg_vec).unwrap();
 
+    println!("Finished setup, running inference function");
+
+    experiments::inference::inference::run(network, architecture, eeg_data, class)
 }
+
+// run the following command to run the compact cnn inference on the 
+// eeg data
+// 0 relu approximation layers are used
+// cargo +nightly run --bin compact-cnn-inference -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm/compact_cnn_no_batch_norm_seed0_subj9.npy --layers 0

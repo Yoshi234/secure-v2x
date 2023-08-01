@@ -228,6 +228,17 @@ impl<P: FixedPointParameters> From<AdditiveShare<FixedPoint<P>>> for FixedPoint<
     }
 }
 
+// adding this change fixes a bug in mod.rs which occurs when you implement batch normalization
+impl<P: FixedPointParameters> Add<FixedPoint<P>> for AdditiveShare<FixedPoint<P>> {
+    type Output = Self;
+
+    #[inline]
+    fn add(mut self, other: FixedPoint<P>) -> Self {
+        self.inner += other;
+        self
+    }
+}
+
 /// Operations on shares mimic those of `FixedPoint<P>` itself.
 /// This means that
 /// * Multiplication by a constant does not automatically truncate the result;

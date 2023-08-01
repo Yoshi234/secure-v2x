@@ -10,6 +10,7 @@ use nn::{
         convolution::{Conv2dParams, Padding},
         fully_connected::FullyConnectedParams,
         Layer, LayerDims, LinearLayer, NonLinearLayer,
+        batch_norm::BatchNormParams,
     },
     tensors::*,
     NeuralArchitecture, NeuralNetwork,
@@ -19,6 +20,7 @@ use rand::{CryptoRng, Rng, RngCore};
 use std::{
     io::{BufReader, BufWriter},
     net::{TcpListener, TcpStream},
+    ops::Add,
 };
 
 pub mod inference;
@@ -228,6 +230,7 @@ fn sample_fc_layer<R: RngCore + CryptoRng>(
     bias.iter_mut()
         .for_each(|w_i| *w_i = generate_random_number(rng).1);
 
+    // This is for the pytorch model implementation
     let pt_weights = weights.clone();
     let pt_bias = bias.clone();
     let params = match vs {
@@ -246,6 +249,37 @@ fn sample_fc_layer<R: RngCore + CryptoRng>(
         params: pt_params,
     };
     (layer, pt_layer)
+}
+
+// batch normalization layer
+fn sample_batch_layer<R: RngCore + CryptoRng>(
+    input_dims: (usize, usize, usize, usize),
+    // normalizer: f64, // need some type of float to compute the 
+    // training set mu/sigma for use with inference
+    rng: &mut R,
+) -> (LinearLayer<TenBitAS, TenBitExpFP>, Option<LinearLayer<TenBitExpFP, TenBitExpFP>>)
+{
+    // this version of the code randomly initializes the weights for the gamma matrix
+    let weight_dims = (input_dims.0, input_dims.1, input_dims.2, input_dims.3);
+    let mut weights = Kernel::zeros(weight_dims);
+    weights
+        .iter_mut()
+        .for_each(|w_i| *w_i = generate_random_number(rng).1);
+
+    let bias_dims = (input_dims.0, input_dims.1, input_dims.2, input_dims.3);
+    let mut bias = Kernel::zeros(bias_dims);
+    bias.iter_mut()
+        .for_each(|w_i| *w_i = generate_random_number(rng).1);
+    let params = BatchNormParams::new(weights, bias);
+    // output_dims are the exact same as the input dimensions of the layer
+    let output_dims = (input_dims.0, input_dims.1, input_dims.2, input_dims.3);
+    let dims = LayerDims {
+        input_dims,
+        output_dims,
+    };
+    let layer = LinearLayer::BatchNorm { dims, params };
+    // right now, I'm only returning the normal layer for batch normalization
+    (layer, None)
 }
 
 #[allow(dead_code)]
@@ -284,8 +318,7 @@ fn sample_avg_pool_layer(
     }
 }
 
-fn add_softmax_layer(nn: &mut NeuralNetwork<TenBitAS, TenBitExpFP>, softmax_layers: &[usize]) {
-}
+
 
 // non-linear activation function for relu
 fn add_activation_layer(nn: &mut NeuralNetwork<TenBitAS, TenBitExpFP>, relu_layers: &[usize]) {

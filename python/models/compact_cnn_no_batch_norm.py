@@ -72,6 +72,7 @@ class compact_cnn_no_batch_norm(torch.nn.Module):
         #what is this nonsense with the self.conv() stuff? 
         # input.shape = [314, 1, 1, 384]
         intermediate = self.conv(inputdata)
+        print(intermediate.shape)
         # intermediate.shape = [314, 32, 1, 321]
         # intermediate = self.batch(intermediate)
         # intermediate.shape = [314, 32, 1, 321]
@@ -79,14 +80,20 @@ class compact_cnn_no_batch_norm(torch.nn.Module):
         # versus with ELU function
         # intermediate = torch.nn.ELU()(intermediate)
         intermediate = torch.nn.ReLU()(intermediate)
+        print(intermediate.shape)
         # intermediate.shape = [314, 32, 1, 321]
         intermediate = self.GAP(intermediate)
+        print(intermediate.shape)
         # intermediate.shape = [314, 32, 1, 1]
         # this is just a reshape layer before the fully connected layer
         # squeezes the data into a matrix (314, 32) from (314, 32, 1, 1)
+        intermediate.reshape(1, 32, 1, 1)
         intermediate = intermediate.view(intermediate.size()[0], -1)
+        
+        print(intermediate.shape)
         # intermediate.shape = [314, 32]
         intermediate = self.fc(intermediate)
+        print(intermediate)
         # intermediate.shape = [314, 2]
         output = self.softmax(intermediate)
 
