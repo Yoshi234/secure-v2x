@@ -70,12 +70,12 @@ where
                 for (&inp, out) in input.iter().zip(&mut output) {
                     *out = if inp > zero { inp } else { f_zero };
                 }
-            }
+            },
             PolyApprox { dims: _d, poly, .. } => {
                 for (&inp, out) in input.iter().zip(&mut output) {
                     *out = poly.evaluate(inp);
                 }
-            }
+            },
         };
         output
     }

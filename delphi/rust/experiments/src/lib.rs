@@ -260,17 +260,17 @@ fn sample_batch_layer<R: RngCore + CryptoRng>(
 ) -> (LinearLayer<TenBitAS, TenBitExpFP>, Option<LinearLayer<TenBitExpFP, TenBitExpFP>>)
 {
     // this version of the code randomly initializes the weights for the gamma matrix
-    let weight_dims = (input_dims.0, input_dims.1, input_dims.2, input_dims.3);
-    let mut weights = Kernel::zeros(weight_dims);
-    weights
+    let gamma_dims = input_dims;
+    let mut gammas = Kernel::zeros(gamma_dims);
+    gammas
         .iter_mut()
         .for_each(|w_i| *w_i = generate_random_number(rng).1);
 
-    let bias_dims = (input_dims.0, input_dims.1, input_dims.2, input_dims.3);
+    let bias_dims = input_dims;
     let mut bias = Kernel::zeros(bias_dims);
     bias.iter_mut()
         .for_each(|w_i| *w_i = generate_random_number(rng).1);
-    let params = BatchNormParams::new(weights, bias);
+    let params = BatchNormParams::new(gammas, bias);
     // output_dims are the exact same as the input dimensions of the layer
     let output_dims = (input_dims.0, input_dims.1, input_dims.2, input_dims.3);
     let dims = LayerDims {

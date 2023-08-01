@@ -5,7 +5,7 @@ use algebra::{fp_64::Fp64Parameters, FixedPoint, FixedPointParameters, FpParamet
 use num_traits::Zero;
 use std::{
     marker::PhantomData,
-    ops::{Mul, Add},
+    ops::{Add, Mul},
 };
 use tch::nn;
 
@@ -13,9 +13,9 @@ use tch::nn;
 // of the model
 
 // CompactCNN implements the normalization step while running the forward pass
-// it doesn't save the values and use them again later. 
+// it doesn't save the values and use them again later.
 
-// I will need to reimplement the code in the python model and have it so that the 
+// I will need to reimplement the code in the python model and have it so that the
 // means are saved throughout the mini-batches which are run over the model
 #[derive(Debug)]
 pub struct BatchNormParams<F, C> {
@@ -31,8 +31,8 @@ unsafe impl<F, C> Send for BatchNormParams<F, C> {}
 unsafe impl<F, C> Sync for BatchNormParams<F, C> {}
 
 impl<F, C> BatchNormParams<F, C>
-where  
-    F: Zero + Copy + Add<C, Output=F> + Mul<C, Output=F>,
+where
+    F: Zero + Copy + Add<C, Output = F> + Mul<C, Output = F>,
     C: Copy + Into<F>,
 {
     pub fn new(gamma: Kernel<C>, beta: Kernel<C>) -> Self {
@@ -58,12 +58,10 @@ where
                         let gamma = self.gammas[(c, 0, 0, 0)];
                         let beta = self.betas[(c, 0, 0, 0)];
                         // gamma and beta are just Kernels
-                        out[(b, c, h, w)] = val*gamma + beta
+                        out[(b, c, h, w)] = val * gamma + beta
                     }
                 }
             }
         }
     }
 }
-
-
