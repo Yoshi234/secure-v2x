@@ -44,7 +44,7 @@ fn cg_helper<R: RngCore + CryptoRng>(
                 let randomizer = match &layer {
                     LinearLayer::Conv2d { .. } | LinearLayer::FullyConnected { .. } => {
                         let mut cg_handler = match &layer {
-                            LinearLayer::Conv2d { .. } => SealServerCG::Conv2D(
+                            ::Conv2d { .. } => SealServerCG::Conv2D(
                                 server_cg::Conv2D::new(&sfhe, layer, &layer.kernel_to_repr()),
                             ),
                             LinearLayer::FullyConnected { .. } => {

@@ -307,6 +307,9 @@ impl<F, C> LinearLayerInfo<F, C> {
     /// the convolutional layer? What's different. Does it have to do with 
     /// the preprocessing step being unecessary for these layers. I think
     /// I saw something about that being the case elsewhere in the code
+    /// 
+    /// I believe the reason for this is that AvgPool and Identity layers do Not
+    /// require an offline phase for processing
     pub fn evaluate_naive(&self, input: &Input<F>, output: &mut Output<F>)
     where
         F: Zero + Mul<C, Output = F> + AddAssign + Copy + Add<C, Output=F>,
