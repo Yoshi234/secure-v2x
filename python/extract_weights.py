@@ -21,7 +21,7 @@ def load_model(file_handle="ELU"):
     return my_net_dict
 
 #extract the weights - input is my_net_dict
-def extract_weights(model_dict, file_handle):
+def extract_weights(model_dict, file_handle="pretrained_numpy_models/compact_cnn_seed0_subj9.npy"):
     params = []
     for name, param in model_dict:
         params.append(param.view(-1))
@@ -30,7 +30,7 @@ def extract_weights(model_dict, file_handle):
     #convert the tensor into a NumPy array
     model_weights = params.cpu().detach().numpy()
     print(sys.path)
-    np.save(f'pretrained_numpy_models/compact_cnn_seed0_subj9.npy', model_weights.astype(np.float64))
+    np.save(f'{file_handle}', model_weights.astype(np.float64))
 
 def main():
     torch_model_file_handle = input("please input the torch model file path (from wd) excluding the extension: ")
