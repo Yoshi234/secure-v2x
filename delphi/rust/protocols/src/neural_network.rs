@@ -180,10 +180,10 @@ where
                         }
                         LinearLayer::Identity { dims } => Output::zeros(dims.output_dimensions()),
                         
-                        // Do I need to implement an offline phase correction for batch normalization? Not sure
-                        LinearLayer::BatchNorm { dims, .. } => {
-                            Output::zeros(dims.output_dimensions())
-                        }
+                        // // Do I need to implement an offline phase correction for batch normalization? Not sure
+                        // LinearLayer::BatchNorm { dims, .. } => {
+                        //     Output::zeros(dims.output_dimensions())
+                        // }
                     };
                     linear_state.insert(i, randomizer);
                 }

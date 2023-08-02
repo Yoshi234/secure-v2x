@@ -3,7 +3,7 @@ use crate::{
     Evaluate,
 };
 use num_traits::{One, Zero};
-use std::ops::{AddAssign, Mul, MulAssign, Add};
+use std::ops::{Add, AddAssign, Mul, MulAssign};
 
 // added batch_norm module link here 7/19/23 (included in linear layers)
 mod linear;
@@ -71,7 +71,14 @@ impl<F, C> Evaluate<F> for Layer<F, C>
 where
     //modification, attempting to resolve issue with evaluate for linear layers - implement the Add trait
     //trait bound for F in evaluate() method for LinearLayer
-    F: Zero + One + MulAssign + Mul<C, Output = F> + AddAssign + PartialOrd<C> + Copy + Add<C, Output=F>, 
+    F: Zero
+        + One
+        + MulAssign
+        + Mul<C, Output = F>
+        + AddAssign
+        + PartialOrd<C>
+        + Copy
+        + Add<C, Output = F>,
     C: std::fmt::Debug + Copy + Into<F> + From<f64> + Zero + One,
 {
     fn evaluate(&self, input: &Input<F>) -> Output<F> {
@@ -138,7 +145,7 @@ impl<'a, F, C: Clone> From<&'a Layer<F, C>> for LayerInfo<F, C> {
             // TODO: Is there a way to match all of these with one statement
             LL(LinearLayer::FullyConnected { dims, params: _ }) => {
                 LayerInfo::LL(*dims, LinearLayerInfo::FullyConnected)
-            }
+            },
             LL(LinearLayer::AvgPool { dims, params }) => LayerInfo::LL(
                 *dims,
                 LinearLayerInfo::AvgPool {
@@ -149,14 +156,11 @@ impl<'a, F, C: Clone> From<&'a Layer<F, C>> for LayerInfo<F, C> {
                     _variable: std::marker::PhantomData,
                 },
             ),
-            LL(LinearLayer::BatchNorm { dims, params}) => LayerInfo::LL(
-                    *dims, 
-                    // what happens if I implement the copy trait for the kernel tensor
-                    // object?
-                    LinearLayerInfo::BatchNorm {
-                        gammas: params.gammas,
-                        betas: params.betas,
-                    },
+            LL(LinearLayer::BatchNorm { dims, params }) => LayerInfo::LL(
+                *dims,
+                // what happens if I implement the copy trait for the kernel tensor
+                // object?
+                LinearLayerInfo::BatchNorm {},
             ),
             LL(LinearLayer::Identity { dims }) => {
                 LayerInfo::LL(*dims, LinearLayerInfo::FullyConnected)
