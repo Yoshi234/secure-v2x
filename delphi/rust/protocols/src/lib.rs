@@ -29,6 +29,21 @@ pub struct KeygenType;
 pub type ServerKeyRcv = InMessage<Vec<std::os::raw::c_char>, KeygenType>;
 pub type ClientKeySend<'a> = OutMessage<'a, Vec<std::os::raw::c_char>, KeygenType>;
 
+/// Client function for generating RSA keys for fully homomorphic encryption
+/// 
+/// Arguments: 
+/// - writer --- a mutable reference to an `IMuxSync<W>` type, where an 
+/// `IMuxSync<W>` is defined as An inverse multiplexer for asynchronous network streams.
+/// Sending/receiving is done across each stream in parallel using a different thread for each stream.
+/// The client writer implements the `Write` and `Send` traits, allowing it to send a public key
+/// to the server for encrypting values with the public key
+/// 
+/// Returns:
+/// - `Result<T, E>` where `T: ClientFHE`, `E: bincode::Error`
+///     - `ClientFHE` --- a struct which contains rust bindings for C++ based implementations of 
+///     `context`, `encoder`, `encryptor`, `evaluator`, and `decryptor`. It is a functional abstraction
+///     for interacting with encrypted values in the Delphi system
+///     - `bincode::Error` --- An error type which can be produced during (de)Serializing
 pub fn client_keygen<W: Write + Send>(
     writer: &mut IMuxSync<W>,
 ) -> Result<ClientFHE, bincode::Error> {
@@ -44,6 +59,7 @@ pub fn client_keygen<W: Write + Send>(
     Ok(cfhe)
 }
 
+/// Server function for getting RSA Public Key for fully homomorphic encryption
 pub fn server_keygen<R: Read + Send>(
     reader: &mut IMuxSync<R>,
 ) -> Result<ServerFHE, bincode::Error> {

@@ -53,18 +53,18 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Valid, rng).0;
     network.layers.push(Layer::LL(conv));
 
-    // 2 (BATCH NORM LAYER)
-    // ([num_samples, 32, 1, 321]) -> ([num_samples, 32, 1, 321])
-    // TODO: Implement batch norm layer functionality for the neural network struct
-    // Not sure how to do this at the moment
-    let input_dims = network.layers.last().unwrap().output_dimensions();
-    // future update --> implement the normalizer parameter to save mean/variance ratio from the 
-    // training set to normalize data during test time
-    // also utilize Ali's batch norm implementation for GPU system - tch vs (device selection)
-    let batch_layer = sample_batch_layer(input_dims, rng).0;
-    network.layers.push(Layer::LL(batch_layer));
+    // // 2 (BATCH NORM LAYER)
+    // // ([num_samples, 32, 1, 321]) -> ([num_samples, 32, 1, 321])
+    // // TODO: Implement batch norm layer functionality for the neural network struct
+    // // Not sure how to do this at the moment
+    // let input_dims = network.layers.last().unwrap().output_dimensions();
+    // // future update --> implement the normalizer parameter to save mean/variance ratio from the 
+    // // training set to normalize data during test time
+    // // also utilize Ali's batch norm implementation for GPU system - tch vs (device selection)
+    // let batch_layer = sample_batch_layer(input_dims, rng).0;
+    // network.layers.push(Layer::LL(batch_layer));
 
-    // 3 (nonlin - ReLU ACTIVATION LAYER)
+    // 2 (nonlin - ReLU ACTIVATION LAYER)
     // ([num_samples, 32, 1, 321]) -> ([num_samples, 32, 1, 321])
     add_activation_layer(&mut network, &relu_layers);
 

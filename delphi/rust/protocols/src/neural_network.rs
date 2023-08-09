@@ -32,6 +32,20 @@ use crate::{gc::ReluProtocol, linear_layer::LinearProtocol, quad_approx::QuadApp
 use protocols_sys::*;
 use std::collections::BTreeMap;
 
+/// NNProtocol is a struct which implements the client and server online and
+/// offline protocols
+/// 
+/// Attributes: 
+/// - `_share` --- an object of type `PhantomData<P>` where
+/// `P` must implement the trait `FixedPointParameters`. In other
+/// words, the PhantomData must implement the parameters for a FixedPoint
+/// representation of a given number
+/// 
+/// **Protocols**
+/// - `NNProtocol::offline_server_protocol`
+/// - `NNProtccol::online_server_protocol`
+/// - `NNProtocol::offline_client_protocol`
+/// - `NNProtocol::online_client_protocol`
 pub struct NNProtocol<P: FixedPointParameters> {
     _share: PhantomData<P>,
 }
@@ -39,17 +53,34 @@ pub struct NNProtocol<P: FixedPointParameters> {
 pub const CLIENT: usize = 1;
 pub const SERVER: usize = 2;
 
+/// Server state does **DNK**
+/// 
+/// Attributes:
+/// - linear_state
+/// - relu_encoders
+/// - relu_output_randomizers
+/// - approx_state
 pub struct ServerState<P: FixedPointParameters> {
     pub linear_state: BTreeMap<usize, Output<P::Field>>,
     pub relu_encoders: Vec<Encoder>,
     pub relu_output_randomizers: Vec<P::Field>,
     pub approx_state: Vec<Triple<P::Field>>,
 }
+
 // This is a hack since Send + Sync aren't implemented for the raw pointer types
 // Not sure if there's a cleaner way to guarantee this
 unsafe impl<P: FixedPointParameters> Send for ServerState<P> {}
 unsafe impl<P: FixedPointParameters> Sync for ServerState<P> {}
 
+/// Client state does **DNK**
+/// 
+/// Attributes:
+/// - relu_circuits
+/// - relu_server_labels
+/// - relu_next_layer_randomizers
+/// - approx_state
+/// - linear_randomizer
+/// - linear_post_application_share
 pub struct ClientState<P: FixedPointParameters> {
     pub relu_circuits: Vec<GarbledCircuit>,
     pub relu_server_labels: Vec<Vec<Wire>>,
@@ -126,9 +157,60 @@ where
     <P::Field as PrimeField>::Params: Fp64Parameters,
     P::Field: PrimeField<BigInt = <<P::Field as PrimeField>::Params as FpParameters>::BigInt>,
 {
+    /// `offline_server_protocol` runs the functionality of the offline server protocol for
+    /// the Delphi system
+    /// 
+    /// Arguments:
+    /// - `reader` --- (mut ref) An `IMuxSync<I>` object where `I: CountingIO<BufReader<TcpStream>>` --> 
+    /// collection of channels which can count and read from the Tcp data stream between the 
+    /// server and the client
+    /// - `writer` --- (mut ref) An `IMuxSync<T>` object where `T: CountingIO<BufWriter<TcpStream>>` --> 
+    /// collection of channels which can count and write to the Tcp data stream between the 
+    /// server and the client
+    /// - `neural_network` --- (reference) NeuralNetwork<T, U> abstraction where:
+    ///     - `T: AdditiveShare<P>`
+    ///         - `P: FixedPoint<TenBitExpParams>` where `P` must implement the trait `FixedPointParameters`
+    ///     - `U: FixedPoint<P>`
+    ///         - `P: TenBitExpParams` where `P` must implement the trait `FixedPointParameters`
+    ///    
+    /// - `rng` --- (mut ref) Random number gen core which is cryptographically secure
+    /// 
+    /// Return:
+    /// - `Result<T, E>`
+    ///     - `T: ServerState<P>` => contains data including
+    ///         - `linear_state` --- **DNK**
+    ///         - `relu_encoders` --- **DNK**
+    ///         - `relu_output_randomizers` --- **DNK**
+    ///         - `approx_state` --- **DNK**
+    ///     - `E: bincode::Error`
+    /// 
+    /// **BUGS**
+    /// - implementation for BatchNormalization layer is incomplete! (8/4/23)
+    /// 
+    /// **Functionality**
+    /// 
+    /// Defines an initial `linear_state` as a `BTreeMap<usize, Input<P>>` object (**DNK** Purpose)
+    /// Receive FHE public key.
+    /// Iterates through the layers of the `neural_network` object defined as an argument
+    /// and pattern matches the type of layer to determine behavior. For each layer `i`, the protocol
+    /// inserts a `randomizer` into the `linear_state` `BTreeMap<F, C>` object
+    /// 
+    /// For each Non-Linear layer (ReLU), it sets the total number of garbled circuit
+    /// relu and quadratic approximation relu functions to run. 
+    /// 
+    /// For each Linear layer, one of two possible steps is taken
+    /// 1. If layer type requires trainable parameters
+    ///     - run `SealServerCG::Lin_Layer_Type(server_cg::Lin_Layer_Type::new())`
+    ///     - run `LinearProtocol::<P>offline_server_protocol()`
+    /// 2. If layer type does NOT require trainable parameters (eg. avg pool or identity)
+    ///     - initialize the layer to an `Input<I>` object with the given input dimensions
+    /// 
+    /// **More Information**
     pub fn offline_server_protocol<R: Read + Send, W: Write + Send, RNG: CryptoRng + RngCore>(
         reader: &mut IMuxSync<R>,
         writer: &mut IMuxSync<W>,
+        // The types P are NOT the same for AdditiveShare and FixedPoint so why are they 
+        // being classified as such here?
         neural_network: &NeuralNetwork<AdditiveShare<P>, FixedPoint<P>>,
         rng: &mut RNG,
     ) -> Result<ServerState<P>, bincode::Error> {
@@ -153,15 +235,26 @@ where
                     let randomizer = match &layer {
                         LinearLayer::Conv2d { .. } | LinearLayer::FullyConnected { .. } => {
                             let mut cg_handler = match &layer {
-                                LinearLayer::Conv2d { .. } => SealServerCG::Conv2D(
-                                    server_cg::Conv2D::new(&sfhe, layer, &layer.kernel_to_repr()),
-                                ),
+                                LinearLayer::Conv2d { .. } => {
+                                    SealServerCG::Conv2D(server_cg::Conv2D::new(
+                                        &sfhe, 
+                                        layer, 
+                                        &layer.kernel_to_repr(),
+                                    ))
+                                },
                                 LinearLayer::FullyConnected { .. } => {
                                     SealServerCG::FullyConnected(server_cg::FullyConnected::new(
                                         &sfhe,
                                         layer,
                                         &layer.kernel_to_repr(),
                                     ))
+                            //  LinearLayer::BatchNorm { .. } => {
+                            //      SealServerCG::BatchNorm(server_cg::BatchNorm::new(
+                            //          &sfhe,
+                            //          layer,
+                            //          &layer.kernel_to_repr(),
+                            //  ))
+                            //  }
                                 }
                                 _ => unreachable!(),
                             };
@@ -178,7 +271,9 @@ where
                         LinearLayer::AvgPool { dims, .. } => {
                             Output::zeros(dims.output_dimensions())
                         }
-                        LinearLayer::Identity { dims } => Output::zeros(dims.output_dimensions()),
+                        LinearLayer::Identity { dims } => {
+                            Output::zeros(dims.output_dimensions())
+                        }
                         
                         // // Do I need to implement an offline phase correction for batch normalization? Not sure
                         // LinearLayer::BatchNorm { dims, .. } => {
@@ -297,7 +392,7 @@ where
                         }
                     };
 
-                    // We reduce here becase the input to future layers requires
+                    // We reduce here because the input to future layers requires
                     // shares to already be reduced correctly; for example,
                     // `online_server_protocol` reduces at the end of each layer.
                     for share in &mut out_share {
@@ -388,6 +483,36 @@ where
         })
     }
 
+    /// `online_server_protocol` runs the online server inference protocol for delphi 
+    /// 
+    /// Arguments:
+    /// - `reader` --- The `IMuxSync<R>` which reads data
+    /// - `writer` --- The `IMuxSync<W>` which writes data
+    /// - `neural_network` --- `NeuralNetwork<T, U>` object where `T=AdditiveShare<P>, U=FixedPoint<P>`
+    /// - `state` --- (ref) `ServerState<P>` object which contains the data which was output from the 
+    /// **offline process**. 
+    /// 
+    /// Returns:
+    /// - `Ok(())` --- `Result<T, E>` where `T: ()` and `E: bincode::Error`
+    /// 
+    /// **BUGS**
+    /// - add BatchNormalization layer functionality to the `online_server_protocol`
+    /// - most of this is only necessary for the Nonlinear layers
+    /// - linear layers do not need so much effort
+    /// 
+    /// **Functionality**
+    /// - initialize the first layer of the network (input / output dimensiosn of the layer)
+    /// - iterate through the rest of the layers and pattern match - perform different functionality based
+    /// on the layer which is being run.
+    /// - NonLinear layers:
+    ///     - Relu (gc)
+    ///     - Quad approx
+    /// - Linear layers:
+    ///     - get the layer randomizer, (ri) for the current layer from the `linear_state` `BTreeMap` object
+    ///     - runs the `LinearProtocol::online_server_protocol()` function, feeding the randomizer, de-randomizer,
+    ///     and next-layer input to the function
+    /// 
+    /// **More Information**
     pub fn online_server_protocol<R: Read + Send, W: Write + Send + Send>(
         reader: &mut IMuxSync<R>,
         writer: &mut IMuxSync<W>,
@@ -461,6 +586,7 @@ where
                 Layer::LL(layer) => {
                     let start_time = timer_start!(|| "Linear layer");
                     // Input for the next layer.
+                    // the layer ranomizer should be a vector or tensor of random values to mask the true weights
                     let layer_randomizer = state.linear_state.get(&i).unwrap();
                     // The idea here is that the previous layer was linear.
                     // Hence the input we're receiving from the client is
@@ -469,6 +595,7 @@ where
                             .iter_mut()
                             .zip(&next_layer_input)
                             .for_each(|(l_r, inp)| {
+                                // what does this line do? - this generates a derandomizer for the following layer?
                                 *l_r += &inp.inner.inner;
                             });
                     }

@@ -37,5 +37,5 @@ The file "experiment_results.txt" in this folder shows the results of the experi
 "experiment_results_2.txt" corresponds to the run where I used the seed '0' instead of seed '1' to see if a difference could be observed
 
 9. `pytorch_batch_norm_tests` 
-contains code for the 
+contains models in npy and tch format which 
 

@@ -156,12 +156,12 @@ impl<'a, F, C: Clone> From<&'a Layer<F, C>> for LayerInfo<F, C> {
                     _variable: std::marker::PhantomData,
                 },
             ),
-            LL(LinearLayer::BatchNorm { dims, params }) => LayerInfo::LL(
-                *dims,
-                // what happens if I implement the copy trait for the kernel tensor
-                // object?
-                LinearLayerInfo::BatchNorm {},
-            ),
+            // LL(LinearLayer::BatchNorm { dims, params }) => LayerInfo::LL(
+            //     *dims,
+            //     // what happens if I implement the copy trait for the kernel tensor
+            //     // object?
+            //     LinearLayerInfo::BatchNorm {},
+            // ),
             LL(LinearLayer::Identity { dims }) => {
                 LayerInfo::LL(*dims, LinearLayerInfo::FullyConnected)
             },

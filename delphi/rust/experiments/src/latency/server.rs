@@ -44,7 +44,7 @@ fn cg_helper<R: RngCore + CryptoRng>(
                 let randomizer = match &layer {
                     LinearLayer::Conv2d { .. } | LinearLayer::FullyConnected { .. } => {
                         let mut cg_handler = match &layer {
-                            ::Conv2d { .. } => SealServerCG::Conv2D(
+                            LinearLayer::Conv2d { .. } => SealServerCG::Conv2D(
                                 server_cg::Conv2D::new(&sfhe, layer, &layer.kernel_to_repr()),
                             ),
                             LinearLayer::FullyConnected { .. } => {
@@ -67,7 +67,7 @@ fn cg_helper<R: RngCore + CryptoRng>(
                         .unwrap()
                     }      
                     // AvgPool and Identity don't require an offline phase
-                    LinearLayer::BatchNorm { dims, .. } => Output::zeros(dims.output_dimensions()),
+                    // LinearLayer::BatchNorm { dims, .. } => Output::zeros(dims.output_dimensions()),
                     LinearLayer::AvgPool { dims, .. } => Output::zeros(dims.output_dimensions()),
                     LinearLayer::Identity { dims } => Output::zeros(dims.output_dimensions()),
                 };

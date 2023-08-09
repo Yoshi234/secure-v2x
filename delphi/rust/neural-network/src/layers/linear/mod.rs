@@ -18,7 +18,7 @@ pub mod convolution;
 use convolution::*;
 
 pub mod batch_norm;
-use batch_norm::*;
+// use batch_norm::*;
 
 pub mod average_pooling;
 use average_pooling::*;
@@ -35,11 +35,11 @@ pub enum LinearLayer<F, C> {
         dims: LayerDims,
         params: Conv2dParams<F, C>,
     },
-    // added a batchnorm enum for the linear layer
-    BatchNorm {
-        dims: LayerDims,
-        params: BatchNormParams<F, C>,
-    },
+    // // added a batchnorm enum for the linear layer
+    // BatchNorm {
+    //     dims: LayerDims,
+    //     params: BatchNormParams<F, C>,
+    // },
     FullyConnected {
         dims: LayerDims,
         params: FullyConnectedParams<F, C>,
@@ -81,7 +81,7 @@ impl<F, C> LinearLayer<F, C> {
     pub fn dimensions(&self) -> LayerDims {
         match self {
             Conv2d { dims, .. }
-            | BatchNorm { dims, .. }
+            // | BatchNorm { dims, .. }
             | FullyConnected { dims, .. }
             | AvgPool { dims, .. }
             | Identity { dims, .. } => *dims,
@@ -110,7 +110,7 @@ impl<F, C> LinearLayer<F, C> {
             Conv2d { dims: _, params: p } => p.kernel.dim(),
             FullyConnected { dims: _, params: p } => p.weights.dim(),
             // BatchNorm betas and gammas have the same dimensions
-            BatchNorm { dims: _, params: p } => p.gammas.dim(),
+            // BatchNorm { dims: _, params: p } => p.gammas.dim(),
             _ => panic!("Identity/AvgPool layers do not have a kernel"),
         };
         (input_dims, output_dims, kernel_dims)
@@ -126,7 +126,7 @@ impl<F, C> LinearLayer<F, C> {
     {
         match self {
             Conv2d { dims: _, params: p } => p.kernel.to_repr(),
-            BatchNorm { dims: _, params: p } => p.gammas.to_repr(),
+            // BatchNorm { dims: _, params: p } => p.gammas.to_repr(),
             FullyConnected { dims: _, params: p } => p.weights.to_repr(),
             _ => panic!("Identity/AvgPool layers do not have a kernel"),
         }
@@ -135,7 +135,7 @@ impl<F, C> LinearLayer<F, C> {
     pub fn eval_method(&self) -> crate::EvalMethod {
         match self {
             Conv2d { dims: _, params } => params.eval_method,
-            BatchNorm { dims: _, params } => params.eval_method,
+            // BatchNorm { dims: _, params } => params.eval_method,
             FullyConnected { dims: _, params } => params.eval_method,
             _ => crate::EvalMethod::Naive,
         }
@@ -150,9 +150,9 @@ impl<F, C> LinearLayer<F, C> {
             Conv2d { dims: _, params: p } => {
                 p.conv2d_naive(input, output);
             },
-            BatchNorm { dims: _, params: p } => {
-                p.batch_norm_naive(input, output);
-            },
+            // BatchNorm { dims: _, params: p } => {
+                // p.batch_norm_naive(input, output);
+            // },
             FullyConnected { dims: _, params: p } => p.fully_connected_naive(input, output),
             AvgPool { dims: _, params: p } => p.avg_pool_naive(input, output),
             Identity { dims: _ } => {
@@ -367,7 +367,7 @@ impl<'a, F, C: Clone> From<&'a LinearLayer<F, C>> for LinearLayerInfo<F, C> {
             },
             LinearLayer::Identity { .. } => LinearLayerInfo::Identity,
             // TODO
-            LinearLayer::BatchNorm { params, .. } => LinearLayerInfo::BatchNorm {},
+            // LinearLayer::BatchNorm { params, .. } => LinearLayerInfo::BatchNorm {},
         }
     }
 }

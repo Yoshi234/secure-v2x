@@ -13,7 +13,9 @@ pub fn softmax(x: &Input<TenBitExpFP>) -> Input<TenBitExpFP> {
     let mut max: TenBitExpFP = x[[0, 0, 0, 0]];
     x.iter().for_each(|e| {
         max = match max.cmp(e) {
+            // if max is less than e, return e is the new max
             cmp::Ordering::Less => *e,
+            // if max is greater than e, return max as the new max
             _ => max,
         };
     });
@@ -36,9 +38,17 @@ pub fn run(
     let mut server_rng = ChaChaRng::from_seed(RANDOMNESS);
     let mut client_rng = ChaChaRng::from_seed(RANDOMNESS);
     let server_addr = "127.0.0.1:8001";
+    // if we modify the dimensions of the client_output, can we perform the test on 314 samples simultaneously?
     let mut client_output = Output::zeros((1, 10, 0, 0));
     crossbeam::thread::scope(|s| {
-        let server_output = s.spawn(|_| nn_server(&server_addr, &network, &mut server_rng));
+        let server_output = s
+            .spawn(|_| {
+                nn_server(
+                    &server_addr, 
+                    &network, 
+                    &mut server_rng,
+                )
+            });
         client_output = s
             .spawn(|_| {
                 nn_client(
@@ -50,6 +60,7 @@ pub fn run(
             })
             .join()
             .unwrap();
+        // run .join() waits for thread execution to finish
         server_output.join().unwrap();
     })
     .unwrap();

@@ -49,6 +49,7 @@ fn main() {
     let weights = args.value_of("weights").unwrap();
     let layers = clap::value_t!(args.value_of("layers"), usize).unwrap();
 
+    // adjust the second parameter of the construct_compact_cnn() method to change the batch_size input
     let mut network = construct_compact_cnn(None, 1, layers, &mut rng);
     let architecture = (&network).into();
 
@@ -79,4 +80,6 @@ fn main() {
 // run the following command to run the compact cnn inference on the 
 // eeg data
 // 0 relu approximation layers are used
+
+// file for the modified conv_fold and bias_fold modified parameter sets: '/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/modified_numpy_models/model_subj_9.npy'
 // cargo +nightly run --bin compact-cnn-inference -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm/compact_cnn_no_batch_norm_seed0_subj9.npy --layers 0
