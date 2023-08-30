@@ -4,10 +4,11 @@ import scipy.io as sio
 import numpy as np
 from sklearn.metrics import accuracy_score
 import torch.optim as optim
-from compact_cnn import compact_cnn
+from python_models.compact_cnn import compact_cnn
+from python_models.compact_cnn_approximation import compact_cnn_approximation
 
 torch.cuda.empty_cache()
-torch.manual_seed(0)
+torch.manual_seed(1)
 
 """
  This file performs leave-one-subject cross-subject classification on the driver drowsiness dataset.
@@ -31,7 +32,7 @@ torch.manual_seed(0)
 """
 
 def train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE,
-                n_epoch=6, batch_size=50, lr=1e-2, test_subj=8):
+                type="no_approx", n_epoch=6, batch_size=50, lr=1e-2, test_subj=8):
     """
     Initializes and trains the model - saving the weights and biases for each 
     layer to the file 'model.pth' in the working directory. These weights / biases
@@ -46,8 +47,13 @@ def train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE,
     train = torch.utils.data.TensorDataset(torch.from_numpy(x_train), torch.from_numpy(y_train))
     train_loader = torch.utils.data.DataLoader(train, batch_size=batch_size, shuffle=True)
 
+    #init my_net object
+    my_net = None
     #load the CNN model to deal with 1D EEG signals
-    my_net = compact_cnn().double().cuda()
+    if type == "no_approx":
+        my_net = compact_cnn().double().cuda()
+    elif type == "approx":
+        my_net = compact_cnn_approximation().double().cuda()
 
     optimizer = optim.Adam(my_net.parameters(), lr=lr)
     #negative log likelihood loss
@@ -79,8 +85,8 @@ def train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE,
     torch.save(my_net.state_dict(), FILE)
 
 #train only on the 9th subject, and save the model weigths to the 
-def run_model(model_name):
-    filename = r'dataset.mat'
+def run_model(model_name, type):
+    filename = r'data/dataset.mat'
     
     #function for loading into scope matlab files
     #returns a matlab:dict type with matrices as values (in key value pairs)
@@ -142,9 +148,9 @@ def run_model(model_name):
 
     #our implementation trains on subjects 1-8 and 10-11
     #tests the model on subject 9 (highest accuracy of experimental model)
-    test_subj=8
+    test_subj=9
     FILE = f'{model_name}.pth'
-    train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE=FILE, test_subj=test_subj)
+    train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE=FILE, test_subj=test_subj, type=type)
 
     #form the testing data
     testindx = np.where(subIdx == test_subj)[0]
@@ -178,7 +184,8 @@ def run_model(model_name):
         
 if __name__ == "__main__":
     model_name = input("Please enter the name of the model you would like to train and evaluate: ")
-    run_model(model_name = model_name)
+    model_type = input("Please enter the model type `approx` or `no_approx`")
+    run_model(model_name = model_name, type=model_type)
     #I want to train / run two versions of the model - the model with ELU function 
     #and the model with the ReLU function implemented in its place
 

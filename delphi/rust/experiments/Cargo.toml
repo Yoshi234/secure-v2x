@@ -42,7 +42,11 @@ path = "src/lib.rs"
 
 [[bin]] 
 name = "compact-cnn-inference"
-path = "src/inference/compactCNN/inference.rs"
+path = "src/inference/compactCNN/single_inference.rs"
+
+[[bin]]
+name = "compact-cnn-accuracy"
+path = "src/validation/compactCNN/validate.rs"
 
 [[bin]]
 name = "minionn-inference"

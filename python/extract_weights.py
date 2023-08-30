@@ -7,8 +7,9 @@ import os
 import sys
 import torch
 import numpy as np
-from models.compact_cnn_pytorch_batch_norm import compact_cnn_pytorch_batch_norm
-from models.compact_cnn import compact_cnn
+from python_models.compact_cnn_pytorch_batch_norm import compact_cnn_pytorch_batch_norm
+from python_models.compact_cnn import compact_cnn
+from python_models.compact_cnn_approximation import compact_cnn_approximation
 
 #load the model
 def load_model(file_handle="ELU", model_type="compact_cnn"): 

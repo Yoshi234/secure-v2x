@@ -10,7 +10,7 @@ use nn::{
         convolution::{Conv2dParams, Padding},
         fully_connected::FullyConnectedParams,
         Layer, LayerDims, LinearLayer, NonLinearLayer,
-        batch_norm::BatchNormParams,
+        //batch_norm::BatchNormParams,
     },
     tensors::*,
     NeuralArchitecture, NeuralNetwork,
@@ -20,7 +20,7 @@ use rand::{CryptoRng, Rng, RngCore};
 use std::{
     io::{BufReader, BufWriter},
     net::{TcpListener, TcpStream},
-    ops::Add,
+    //ops::Add,
 };
 
 pub mod inference;

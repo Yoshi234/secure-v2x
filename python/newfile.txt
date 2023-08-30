@@ -1,7 +1,0 @@
-======================================================================================================
-   0:README.md                       |   1:training.py                     |   2:duplicate_results               
-   3:compact_cnn.py                  |   4:newfile.txt                     |   5:baseline_results                
-   6:test_subj9_iterative_results    |   7:main.py                         |   8:extract_weights.py              
-   9:data                            |  10:pretrained_torch_models         |  11:__pycache__                     
-  12:pretrained_numpy_models         |  13:exploratory_analysis.ipynb      |
-======================================================================================================
