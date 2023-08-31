@@ -3,13 +3,20 @@ import scipy.io as sio
 import numpy as np
 from sklearn.metrics import accuracy_score
 import torch.optim as optim
-from compact_cnn import compact_cnn
+# run from parent package
+from python_models.compact_cnn import compact_cnn
 
 torch.cuda.empty_cache()
 torch.manual_seed(0)   
 
+def print_torch_model_parameters(model):
+    for name, value in model.state_dict().items():
+        print(f"{name:20}:{value}")
+        print(f"{'size':20}:{value.size()}\n")
+        print(100*"=")
+
 def eval_model(model_name, subj_num):
-    filename = r'../data/dataset.mat'
+    filename = r'data/dataset.mat'
     
     #function for loading into scope matlab files
     #returns a matlab:dict type with matrices as values (in key value pairs)
@@ -27,7 +34,6 @@ def eval_model(model_name, subj_num):
     #11 subjects in the dataset, each sample being 3-seconds of 
     #data from 30 channels with a sampling rate of 128Hz
     channelnum = 30
-    subjnum = 11
     samplelength = 3
     sf = 128
 
@@ -74,10 +80,16 @@ def eval_model(model_name, subj_num):
     #PATH should be set to the path to the state dict of the model
 
     my_net.load_state_dict(torch.load(FILE))
+    print_torch_model_parameters(my_net)
 
     #Run the test code of the model
     my_net.train(False)
     
+    # print the first 5 eeg_samples
+    # for i in range(5):
+    #     print(f"sample {i}")
+    #     print(x_test[i])
+
     with torch.no_grad():
         temp_test = torch.DoubleTensor(x_test).cuda()
         answer = my_net(temp_test)
@@ -87,12 +99,14 @@ def eval_model(model_name, subj_num):
 
         # results[test_subj] = acc
         results[0] = acc
+        # print(preds)
+        # print(y_test)
 
         #save accuracy results to results.txt file
 
-    with open(f'{model_name}_results.txt', 'w') as f:
-        f.write(f"{results}")
-        f.write(f"\n")
+    # with open(f'{model_name}_results.txt', 'w') as f:
+    #     f.write(f"{results}")
+    #     f.write(f"\n")
 
 if __name__ == "__main__":
     print("pretrained torch models are located at ../pretrained_torch_models/file.pth relative to this file")

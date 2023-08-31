@@ -1,21 +1,18 @@
 # the test index for the subject 9 value is 284
-import sys
-sys.path.append("/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/models")
-sys.path.append("/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm")
 import torch
 import scipy.io as sio
 import numpy as np
 import torch.optim as optim
 # path was appended above
-from compact_cnn_no_batch_norm import compact_cnn_no_batch_norm
+from python_models.compact_cnn_no_batch_norm import compact_cnn_no_batch_norm
 
 torch.cuda.empty_cache()
 torch.manual_seed(4)
 
-FILE = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm/subj9_seed0_no_batch_norm.pth"
+FILE = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm_experiments/subj9_seed0_no_batch_norm.pth"
 
 def run_inference(subj_num=9, sample_idx=284):
-    filename = r'../data/dataset.mat'
+    filename = r'data/dataset.mat'
 
     # load data
     tmp = sio.loadmat(filename)
@@ -70,7 +67,7 @@ def run_inference(subj_num=9, sample_idx=284):
         temp_test = torch.DoubleTensor(x_test_val).cuda()
         answer = my_net(temp_test)
         probs = answer.cpu().numpy()
-        preds = probs.argmax(axis=-1)
+        preds = probs.argmax(axis=-1)[0]
 
         print(f"Class was {y_test_val}, Inference result was {preds}")
 

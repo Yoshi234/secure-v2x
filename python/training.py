@@ -82,7 +82,7 @@ def train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE,
 
     #save the model as a torch pt (model) file
     #then reload the model in the main 'run_model' function
-    torch.save(my_net.state_dict(), FILE)
+    # torch.save(my_net.state_dict(), FILE)
 
 #train only on the 9th subject, and save the model weigths to the 
 def run_model(model_name, type):
@@ -179,8 +179,8 @@ def run_model(model_name, type):
         # results[test_subj] = acc
 
         #save accuracy results to results.txt file
-        with open(f'{model_name}_results.txt', 'w') as f:
-            f.write(f"{acc}")
+        # with open(f'{model_name}_results.txt', 'w') as f:
+        #     f.write(f"{acc}")
         
 if __name__ == "__main__":
     model_name = input("Please enter the name of the model you would like to train and evaluate: ")
