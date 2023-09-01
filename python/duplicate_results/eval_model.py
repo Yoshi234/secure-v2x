@@ -101,6 +101,7 @@ def eval_model(model_name, subj_num):
         results[0] = acc
         # print(preds)
         # print(y_test)
+        print(acc)
 
         #save accuracy results to results.txt file
 
