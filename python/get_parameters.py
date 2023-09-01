@@ -5,6 +5,7 @@ import numpy as np
 from models.compact_cnn import compact_cnn
 from models.compact_cnn_pytorch_batch_norm import compact_cnn_pytorch_batch_norm
 
+
 def load_model(file_handle="pretrained_torch_models/model_subj_9", model="compact_cnn"):
     FILE = f'{file_handle}.pth'
     my_net = None

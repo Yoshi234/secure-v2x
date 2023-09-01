@@ -7,6 +7,8 @@ python -m delphi.rust.experiments.src.validation.generate_test_eeg_samples no_ap
 
 """
 
+import pdb
+pdb.set_trace()
 from os import path
 import torch
 import scipy.io as sio
