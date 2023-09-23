@@ -82,12 +82,13 @@ def train_model(subIdx, xdata, channelnum, samplelength, sf, ydata, FILE,
 
     #save the model as a torch pt (model) file
     #then reload the model in the main 'run_model' function
-    # torch.save(my_net.state_dict(), FILE)
+    torch.save(my_net.state_dict(), FILE)
 
 #train only on the 9th subject, and save the model weigths to the 
 def run_model(model_name, type):
     filename = r'data/dataset.mat'
     
+file_names.txt
     #function for loading into scope matlab files
     #returns a matlab:dict type with matrices as values (in key value pairs)
     tmp = sio.loadmat(filename)

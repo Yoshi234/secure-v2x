@@ -45,6 +45,9 @@ name = "compact-cnn-inference"
 path = "src/inference/compactCNN/single_inference.rs"
 
 [[bin]]
+name = "compact-cnn-sequential-inference"
+path = "src/inference/compactCNN/sequential_inference.rs"
+[[bin]]
 name = "compact-cnn-accuracy"
 path = "src/validation/compactCNN/validate.rs"
 

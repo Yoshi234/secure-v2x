@@ -2,7 +2,7 @@ use crate::*;
 use neural_network::{ndarray::Array4, tensors::Input, NeuralArchitecture};
 use rand::SeedableRng;
 use rand_chacha::ChaChaRng;
-use std::cmp;
+use std::{cmp, fs, io::Write};
 
 const RANDOMNESS: [u8; 32] = [
     0x11, 0xe0, 0x8f, 0xbc, 0x89, 0xa7, 0x34, 0x01, 0x45, 0x86, 0x82, 0xb6, 0x51, 0xda, 0xf4, 0x76,
@@ -30,10 +30,12 @@ pub fn softmax(x: &Input<TenBitExpFP>) -> Input<TenBitExpFP> {
 
 // we will implement the batch normalization pre-processing step here
 pub fn run(
-    network: NeuralNetwork<TenBitAS, TenBitExpFP>,
-    architecture: NeuralArchitecture<TenBitAS, TenBitExpFP>,
-    image: Array4<f64>,
+    network: &NeuralNetwork<TenBitAS, TenBitExpFP>,
+    architecture: &NeuralArchitecture<TenBitAS, TenBitExpFP>,
+    image: &Array4<f64>,
     class: i64,
+    results_file: &str,
+    sample: i64,
 ) {
     let mut server_rng = ChaChaRng::from_seed(RANDOMNESS);
     let mut client_rng = ChaChaRng::from_seed(RANDOMNESS);
@@ -67,5 +69,14 @@ pub fn run(
     let sm = softmax(&client_output);
     let max = sm.iter().map(|e| f64::from(*e)).fold(0. / 0., f64::max);
     let index = sm.iter().position(|e| f64::from(*e) == max).unwrap() as i64;
+    
+    // write the output values to a separate ".txt" file that can be analyzed with python
+    // later to obtain accuracy information, etc.
+    if results_file != "None" && sample != -1 {
+        let mut file_ref = fs::OpenOptions::new().append(true).open(results_file).expect("Unable to open file");
+        
+        //write results to text file in format [{class} {inference}\n]
+        file_ref.write_all(&format!("{} {} {}\n" ,sample, class, index).as_bytes()).expect("write failed");
+    }
     println!("Correct class is {}, inference result is {}", class, index);
 }

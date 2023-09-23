@@ -74,12 +74,12 @@ fn main() {
 
     println!("Finished setup, running inference function");
 
-    experiments::inference::inference::run(network, architecture, eeg_data, class)
+    experiments::inference::inference::run(&network, &architecture, &eeg_data, class, "None", -1)
 }
 
 // run the following command to run the compact cnn inference on the 
 // eeg data
 // 0 relu approximation layers are used
 
-// file for the modified conv_fold and bias_fold modified parameter sets: '/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/modified_numpy_models/model_subj_9.npy'
-// cargo +nightly run --bin compact-cnn-inference -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm/compact_cnn_no_batch_norm_seed0_subj9.npy --layers 0
+// file for the modified conv_fold and bias_fold modified parameter sets: '/home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/pretrained_model_weights/modified_numpy_models/model_subj_9.npy'
+// cargo +nightly run --bin compact-cnn-inference -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/no_batch-norm_experiments/compact_cnn_no_batch_norm_seed0_subj9.npy --layers 0

@@ -44,13 +44,24 @@ pub fn run(
     let cat_failures = AtomicUsize::new(0);
     let non_cat_failures = AtomicUsize::new(0);
 
+    // having several ports is important so that I can run multiple inference threads simultaneously
+    // on the same network / ip
     let thread_fn = || {
         let i = image_idx.fetch_add(1, Ordering::SeqCst);
         if i >= images.len() {
             return;
         }
         let port_off = port_idx.fetch_add(1, Ordering::SeqCst);
+        // EDIT: change the server address functionality to just 8001 --> giving me err conn refused messages
+        // with the current code - not sure what this is doing. After going over the port error, it generates
+        // connection refused errors - this leads me to believe that you can't actually perform the 
+        // inference on a multithreaded scope like the authors intended. (at least not for our server)
+
+        // solution - find a way to run the inference as a collective batch that can be fed as input to the 
+        // inference component of the network
         let server_addr = format!("127.0.0.1:{}", base_port + port_off);
+        println!("{}", server_addr);
+        // this is just copied over from the inference file
 
         let mut server_rng = ChaChaRng::from_seed(RANDOMNESS);
         let mut client_rng = ChaChaRng::from_seed(RANDOMNESS);

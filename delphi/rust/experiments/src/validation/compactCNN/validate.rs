@@ -38,6 +38,14 @@ fn get_args() -> ArgMatches<'static> {
                 .help("Path to test eeg_data")
                 .required(true),
         )
+        .arg(
+            Arg::with_name("layers")
+                .short("l")
+                .long("layers")
+                .takes_value(true)
+                .help("Number of approximation layers to use")
+                .required(true)
+        )
         .get_matches()
 }
 
@@ -50,7 +58,7 @@ fn main() {
 
     // Build network
     // there are 314 samples in the test batch for compact_cnn
-    let mut network = construct_compact_cnn(None, 314, layers, &mut rng);
+    let mut network = construct_compact_cnn(None, 1, layers, &mut rng);
     let architecture = (&network).into();
 
     // load network weights
@@ -77,7 +85,7 @@ fn main() {
     let mut eeg_data: Vec<Array4<f64>> = Vec::new();
     for i in 0..classes.len() {
         buf = vec![];
-        std::fs::File::open(data_dir.join(Path::new(&format!("eeg_data_{}.npy", i))))
+        std::fs::File::open(data_dir.join(Path::new(&format!("eeg_sample_{}.npy", i))))
             .unwrap()
             .read_to_end(&mut buf)
             .unwrap();
@@ -87,3 +95,13 @@ fn main() {
     }
     experiments::validation::validate::run(network, architecture, eeg_data, classes, plaintext);
 }
+
+// Run the following command to run this file (from `/delphi/rust/experiments`)
+// cargo +nightly run --bin compact-cnn-accuracy -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/pretrained_model_weights/modified_numpy_models/model_subj_9.npy --eeg_data /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation --layers 0
+
+
+// RUN MODEL WITH NO APPROX RELU
+// cargo +nightly run --bin compact-cnn-accuracy -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/pretrained_model_weights/modified_numpy_models/modified_numpy_models_no_approx/model_subj_9.npy --layers 0 --eeg_data /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation
+
+// RUN MODEL WITH APPROX RELU
+// 
