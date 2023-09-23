@@ -1,3 +1,6 @@
 repo_token
 /python/data/dataset.mat
 delphi/rust/protocols-sys/c++/build
+python/python_models/__pycache__
+python/duplicate_results/__pycache__
+python/__pycache__
