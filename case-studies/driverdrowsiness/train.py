@@ -140,7 +140,9 @@ def run():
 
             print("Subject " + f"{i}: " + str(acc))
             results[i-1] = acc
-
+            
+            base_folder = "pretrained"
+            os.makedirs(base_folder, exist_ok=True)
             folder_path = "pretrained/" + "sub" + f"{i}/"
             os.makedirs(folder_path, exist_ok=True)
             torch.save(my_net.state_dict(), folder_path + "model.pth")
