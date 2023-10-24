@@ -38,7 +38,7 @@ class CompactCNN(torch.nn.Module):
     def forward(self, inputdata):
         intermediate = self.conv(inputdata)
         intermediate = self.batch(intermediate)
-        intermediate = torch.nn.ELU()(intermediate)
+        intermediate = torch.nn.ReLU()(intermediate)
         intermediate = self.GAP(intermediate)
         intermediate = intermediate.view(intermediate.size()[0], -1)
         intermediate = self.fc(intermediate)

@@ -153,17 +153,25 @@ fn main() {
         eeg_data.push(input);
     }       
     
-    for i in 109..314 {
+    for i in 101..314 {
         experiments::inference::inference::run(&network, &architecture, &eeg_data[i], classes[i], results_file, i as i64);
     }
 }
 
+// start a new screen to run the inference using the following commands
+// `screen -S session_name`
+// To kill a session use the command
+// `screen -X -S session_name quit` 
+// if you have multiple screens running with the same name, you may need to specify the session
+// process ID in front of the session_name
+// use `screen -r session_name` to switch into the desired session
+
 // `cargo +nightly run --bin compact-cnn-sequential-inference -- 
-//     --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/pretrained_model_weights/modified_numpy_models/modified_numpy_models_no_approx/model_subj_9.npy
+//     --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/pretrained/sub9/model.npy
 //     --layers 0
-//     --eeg_data /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation 
+//     --eeg_data /home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation
 //     --num_samples (1 to 314) 
-//     --results_file /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation/classification_results.txt`
+//     --results_file /home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation/Classification_Results.txt
 
 // This is written in a single line as follows
-//  cargo +nightly run --bin compact-cnn-sequential-inference -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/python/pretrained_model_weights/modified_numpy_models/modified_numpy_models_no_approx/model_subj_9.npy --layers 0 --eeg_data /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation --num_samples 3 --results_file /home/jjl20011/snap/snapd-desktop-integration/current/Lab/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation/classification_results.txt
+//  cargo +nightly run --bin compact-cnn-sequential-inference -- --weights /home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/pretrained/sub9/model.npy --layers 0 --eeg_data /home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation --num_samples 3 --results_file /home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation/Classification_Results.txt

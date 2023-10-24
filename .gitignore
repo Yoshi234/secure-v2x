@@ -5,6 +5,7 @@ python/python_models/__pycache__
 python/duplicate_results/__pycache__
 python/__pycache__
 author.py
+case_studies/driverdrowsiness/data
 case-studies/driverdrowsiness/models/__pycache__
 case-studies/driverdrowsiness/pretrained/sub1
 case-studies/driverdrowsiness/pretrained/sub2

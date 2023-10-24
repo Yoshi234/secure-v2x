@@ -15,8 +15,8 @@ import numpy as np
 import os
 import random
 import sys
-from python.python_models.compact_cnn_approximation import compact_cnn_approximation
-from python.python_models.compact_cnn import compact_cnn
+from case_studies.driverdrowsiness.models.compactcnn import CompactCNN
+# from python.python_models.compact_cnn import compact_cnn
 
 # debugging function
 
@@ -39,13 +39,13 @@ def build_model(type):
     """
     my_net = None
     if type == "no_approx":
-        my_net = compact_cnn().double().cuda()
+        my_net = CompactCNN().double().cuda()
         my_net.load_state_dict(torch.load(
-            "/home/ala22014/V2V-Delphi-Applications/python/pretrained_model_weights/pretrained_torch_models/model_subj_9.pth"))
-    elif type == "approx":
-        my_net = compact_cnn_approximation().double().cuda()
-        my_net.load_state_dict(torch.load(
-            "/home/ala22014/V2V-Delphi-Applications/python/pretrained_model_weights/pretrained_torch_models/torch_models_with_poly_approx_relu/model_subj_9_seed0.pth"))
+            "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/pretrained/sub9/model.pth"))
+    # elif type == "approx":
+    #     my_net = compact_cnn_approximation().double().cuda()
+    #     my_net.load_state_dict(torch.load(
+    #         "/home/ala22014/V2V-Delphi-Applications/python/pretrained_model_weights/pretrained_torch_models/torch_models_with_poly_approx_relu/model_subj_9_seed0.pth"))
     my_net.train(False)
 
     return my_net
@@ -57,7 +57,7 @@ def generate_eeg_data(num_samples, dataset, eeg_data_path=None):
     """
     # load the dataset into scope
     if eeg_data_path == None:
-        eeg_data_path = "/home/ala22014/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation"
+        eeg_data_path = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation"
 
     xdata = np.array(dataset['EEGsample'])
     label = np.array(dataset['substate'])
@@ -112,7 +112,7 @@ def test_network(model, eeg_data_path=None):
 
     # print_torch_model_parameters(model)
     if eeg_data_path == None:
-        eeg_data_path = "/home/ala22014/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation"
+        eeg_data_path = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation"
     # load image classes
     classes = np.load(path.join(eeg_data_path, "classes.npy"))
     correct = []
@@ -131,26 +131,11 @@ def test_network(model, eeg_data_path=None):
 
 
 if __name__ == "__main__":
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument('-w', '--weights_path', required=True, type=str,
-    #                     help='<REQUIRED> path to model weights')
-    # parser.add_argument('type', '--type', type=str,
-    #                     help='<REQUIRED> type `no_approx` or `approx`')
-    # parser.add_argument('-e', '--eeg_data_path', required=True, type=str,
-    #                     help='Path to place images')
-    # parser.add_argument('-g', '--generate', required=False, type=int,
-    #                     help='How many eeg_samples to generate (default=314)')
-    # args = parser.parse_args()
-
     # load dataset -- figure out which location to put the files in later
-    eeg_data_path = "/home/ala22014/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/eeg_test_samples_subject9"
+    # eeg_data_path = "/home/ala22014/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/eeg_test_samples_subject9"
     dataset = sio.loadmat(
-        "/home/ala22014/V2V-Delphi-Applications/python/data/dataset.mat")
+        "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/data/dataset.mat")
 
-    # Resolve paths
-    # weights_path = path.abspath(args.weights_path)
-    # eeg_data_path = path.abspath(args.eeg_data_path)
-    # os.makedirs(eeg_data_path, exist_ok=True)
     if len(sys.argv) < 2:
         print("Usage: {sys.agrv[0]} model_type")
         print("you can choose model_type=approx or no_approx")
@@ -163,5 +148,4 @@ if __name__ == "__main__":
 
     # pass the loaded dataset as an argument to the data generation function
     generate_eeg_data(num_samples=314, dataset=dataset)
-
     print(f"Accuracy: {test_network(model)}")

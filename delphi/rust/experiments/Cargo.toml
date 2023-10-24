@@ -68,6 +68,14 @@ name = "resnet32-server"
 path = "src/latency/resnet32/server.rs"
 
 [[bin]]
+name = "compact-cnn-client"
+path = "src/latency/compactcnn/client.rs"
+
+[[bin]]
+name = "compact-cnn-server"
+path = "src/latency/compactcnn/server.rs"
+
+[[bin]]
 name = "minionn-client"
 path = "src/latency/minionn/client.rs"
 
