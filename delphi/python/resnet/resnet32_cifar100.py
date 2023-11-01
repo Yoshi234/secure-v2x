@@ -10,7 +10,7 @@ import random
 import resnet32_model
 from os import path
 
-from tensorflow.keras.models import Model
+from tensorflow.keras.models import Model, load_model
 from tensorflow.keras.utils import get_custom_objects
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.layers import Activation

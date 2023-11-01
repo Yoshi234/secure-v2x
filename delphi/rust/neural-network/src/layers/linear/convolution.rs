@@ -93,6 +93,14 @@ where
         }
     }
 
+    /// calculates convolutional layer using naive methodology
+    /// 
+    /// Arguments:
+    /// - input --- the input tensor of values
+    /// - output --- output tensor object - these are special wrappings
+    /// 
+    /// Returns
+    /// - None
     pub fn conv2d_naive(&self, input: &Input<F>, out: &mut Output<F>) {
         let (batch_size, in_channels, in_height, in_width) = input.dim();
         let (num, k_channels, k_height, k_width) = self.kernel.dim();

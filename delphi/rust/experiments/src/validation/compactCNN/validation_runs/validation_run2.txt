@@ -41309,3 +41309,77 @@ StartMsg: Online Communication
 
 EndMsg: Online Communication
 Correct class is 1, inference result is 1
+Start:   Receiving keys
+End:     Receiving keys.............................................................3.618s
+Start:   Server offline phase
+··Start:   Linear layers offline phase
+····Start:   Server linear offline protocol
+······Start:   Preprocessing
+······End:     Preprocessing........................................................3.700ms
+······Start:   Receiving Input
+······End:     Receiving Input......................................................2.320s
+······Start:   Processing Layer
+······End:     Processing Layer.....................................................83.817s
+······Start:   Sending result
+······End:     Sending result.......................................................1.738ms
+····End:     Server linear offline protocol.........................................86.142s
+····Start:   Server linear offline protocol
+······Start:   Preprocessing
+······End:     Preprocessing........................................................1.730ms
+······Start:   Receiving Input
+······End:     Receiving Input......................................................164.233ms
+······Start:   Processing Layer
+······End:     Processing Layer.....................................................636.489ms
+······Start:   Sending result
+······End:     Sending result.......................................................1.25ms
+····End:     Server linear offline protocol.........................................803.572ms
+··End:     Linear layers offline phase..............................................89.403s
+··Start:   ReLU layers offline phase, with 12288 activations
+····Start:   ReLU offline protocol
+······Start:   Garbling
+······End:     Garbling.............................................................27.467ms
+······Start:   Encoding inputs
+······End:     Encoding inputs......................................................40.738ms
+······Start:   Sending GCs
+······End:     Sending GCs..........................................................108.235ms
+······Start:   OTs
+······End:     OTs..................................................................84.549ms
+····End:     ReLU offline protocol..................................................261.198ms
+··End:     ReLU layers offline phase, with 12288 activations........................263.516ms
+··Start:   Approx layers offline phase, with 0 activations
+··End:     Approx layers offline phase, with 0 activations..........................70ns
+End:     Server offline phase.......................................................89.667s
+Start:   Server online phase
+··Start:   Linear layer
+····Start:   Linear online protocol
+····End:     Linear online protocol.................................................3.440ms
+··End:     Linear layer.............................................................3.549ms
+··Start:   ReLU layer
+····Start:   ReLU online protocol
+······Start:   Encoding inputs
+······End:     Encoding inputs......................................................14.23ms
+······Start:   Sending inputs
+······End:     Sending inputs.......................................................60ns
+····End:     ReLU online protocol...................................................14.57ms
+··End:     ReLU layer...............................................................17.989ms
+··Start:   Linear layer
+····Start:   Linear online protocol
+····End:     Linear online protocol.................................................36.419µs
+··End:     Linear layer.............................................................44.444µs
+··Start:   Linear layer
+····Start:   Linear online protocol
+····End:     Linear online protocol.................................................38.465ms
+··End:     Linear layer.............................................................38.489ms
+End:     Server online phase........................................................60.195ms
+StartMsg: Offline Communication
+  
+  Read 75527556 bytes
+  Wrote 227873163 bytes
+
+EndMsg: Offline Communication
+StartMsg: Online Communication
+  
+  Read 3842 bytes
+  Wrote 14549075 bytes
+
+EndMsg: Online Communication

@@ -82,8 +82,5 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     network.layers.push(Layer::LL(fc));
     assert!(network.validate());
 
-    // 7 (nonlin - SOFTMAX LAYER)
-    // need to implement the softmax layer to complete the network architecture
-    // will need to build a garbled circuit for this function!!!
     network
 }

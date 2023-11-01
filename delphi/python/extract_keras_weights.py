@@ -8,10 +8,12 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow as tf
 
+import h5py
 from minionn import minionn_model
 from resnet import resnet32_model
 from tensorflow.keras.datasets import cifar10, cifar100
 from tensorflow.keras.utils import get_custom_objects
+from tensorflow.keras.models import load_model
 from os import path
 
 def build_model(model_builder, approx):
@@ -130,7 +132,7 @@ def serialize_weights(model, save_path):
     np.save(os.path.join(save_path,"model.npy"), network_weights.astype(np.float64))
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('model', type=int, help='<REQUIRED> Use Minionn (0) or Resnet32 (1)')
     parser.add_argument('-w', '--weights_path', required=True, type=str,
@@ -170,3 +172,77 @@ if __name__ == "__main__":
     
     # Serialize weights for Rust
     serialize_weights(model, save_path)
+
+def test_minionn():
+    model_builder = minionn_model
+    # Select correct model and dataset
+    model_builder = resnet32_model if args.model else minionn_model
+    dataset = cifar10
+    
+    approx = [3]
+    wpath = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/python/minionn/pretrained/3_approx/model"
+    spath = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/python/minionn/pretrained/3_approx"
+    # Resolve paths 
+    weights_path = path.abspath(wpath)
+    save_path = path.abspath(spath)
+
+    # Build model - use 
+    model = build_model(model_builder, approx)
+    model.load_weights(weights_path)
+
+    acc = test_accuracy(model, dataset)
+    print(f"Accuracy: {acc}%\n")
+
+    quantize(model)
+    model.save_weights(os.path.join(save_path, "model_quant.h5"))
+    acc = test_accuracy(model, dataset)
+    print(f"Quantized Accuracy: {acc}%")
+    
+    # Serialize weights for Rust
+    serialize_weights(model, save_path)
+
+def test_resnet():
+    # Select correct model and dataset
+    model_builder = resnet32_model
+    dataset = cifar100
+
+    wpath = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/python/resnet/pretrained/relu/model"
+    spath = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/python/resnet/pretrained/relu"
+    # Resolve paths 
+    weights_path = path.abspath(wpath)
+    save_path = path.abspath(spath) 
+
+    # Build model - use all ReLU baseline
+    model = build_model(model_builder, [])
+    model.load_weights(weights_path)
+
+    acc = test_accuracy(model, dataset)
+    print(f"Accuracy: {acc}%\n")
+
+    quantize(model)
+    model.save_weights(os.path.join(save_path, "model_quant.h5"))
+    acc = test_accuracy(model, dataset)
+    print(f"Quantized Accuracy: {acc}%")
+
+    # Serialize weights for Rust
+    serialize_weights(model, save_path)
+
+def open_resnet():
+    wpath = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/python/resnet/pretrained/relu/model"
+    f = h5py.File(wpath, "r")
+    print(list(f.keys()))
+    # def print_attrs(name, obj):
+    #     print(name)
+    #     for key, val in obj.attrs.items():
+    #         print("    %s: %s" % (key, val))
+
+    # f.visititems(print_attrs)
+    # for name, func in model.signatures.items():
+    #     print("Signature name: {}\nSignature: {}".format(name, func))
+
+
+if __name__ == "__main__":
+    # main()
+    # test_resnet()
+    # test_minionn()
+    open_resnet()

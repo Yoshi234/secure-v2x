@@ -29,10 +29,29 @@ def test_model(model_path, x_test, y_test):
 
         print("Accuracy: " + "{:.2f}%".format(acc * 100))
 
+def sequential_testing(model_path, x_test, y_test, res_path):
+    my_net = CompactCNN().double().cuda()
+    my_net.load_state_dict(torch.load(model_path))
+    my_net.eval()
+
+    correct = []
+    my_net.train(False)
+    with torch.no_grad():
+        for i in range(len(y_test)):
+            temp_test = torch.DoubleTensor(x_test[i]).reshape(1,1,1,384).cuda()
+            answer = my_net(temp_test)
+            probs = answer.cpu().numpy()
+            preds = probs.argmax(axis=-1)
+            correct += [1] if preds == y_test[i] else [0]
+            with open(res_path, "a") as f:
+                f.write("{} {} {}\n".format(i, y_test[i], preds[0]))
+
+
 if __name__ == '__main__':
     # load data from the file
     filename = r'data/dataset.mat'
     subjnum = 9
+    res_path = "dev_work/experiments/output{}.txt".format(subjnum)
 
     tmp = sio.loadmat(filename)
     xdata = np.array(tmp['EEGsample'])
@@ -70,3 +89,4 @@ if __name__ == '__main__':
 
     model_path = "pretrained/" + "sub" + f"{subjnum}/" + "model.pth"
     test_model(model_path, x_test, y_test)
+    sequential_testing(model_path, x_test, y_test, res_path)
