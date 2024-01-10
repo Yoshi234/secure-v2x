@@ -153,7 +153,7 @@ fn main() {
         eeg_data.push(input);
     }       
     
-    for i in 157..314 {
+    for i in 77..157 {
         experiments::inference::inference::run(&network, &architecture, &eeg_data[i], classes[i], results_file, i as i64);
     }
 }

@@ -44,44 +44,52 @@ pub fn construct_minionn<R: RngCore + CryptoRng>(
     add_activation_layer(&mut network, &relu_layers);
     // 2
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let kernel_dims = (64, 64, 3, 3);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Same, rng).0;
     network.layers.push(Layer::LL(conv));
     add_activation_layer(&mut network, &relu_layers);
     // 3
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let pool = sample_avg_pool_layer(input_dims, (2, 2), 2);
     network.layers.push(Layer::LL(pool));
     // 4
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let kernel_dims = (64, 64, 3, 3);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Same, rng).0;
     network.layers.push(Layer::LL(conv));
     add_activation_layer(&mut network, &relu_layers);
     // 5
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let kernel_dims = (64, 64, 3, 3);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Same, rng).0;
     network.layers.push(Layer::LL(conv));
     add_activation_layer(&mut network, &relu_layers);
     // 6
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let pool = sample_avg_pool_layer(input_dims, (2, 2), 2);
     network.layers.push(Layer::LL(pool));
     // 7
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let kernel_dims = (64, 64, 3, 3);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Same, rng).0;
     network.layers.push(Layer::LL(conv));
     add_activation_layer(&mut network, &relu_layers);
     // 8
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let kernel_dims = (64, 64, 1, 1);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Valid, rng).0;
     network.layers.push(Layer::LL(conv));
     add_activation_layer(&mut network, &relu_layers);
     // 9
     let input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}\n", input_dims);
     let kernel_dims = (16, 64, 1, 1);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Valid, rng).0;
     network.layers.push(Layer::LL(conv));

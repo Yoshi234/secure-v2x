@@ -112,6 +112,8 @@ where
             .read_to_end(&mut buf)
             .unwrap();
         let weights: Vec<f64> = NpyData::from_bytes(&buf).unwrap().to_vec();
+        println!("made it past converting the weights into numpy data");
+        println!("{:?}", weights);
         let mut weights_idx = 0;
 
         // npy can't do multi-dimensional numpy serialization so all the weights are
@@ -151,6 +153,7 @@ where
             }
             .zip(new_bias.iter())
             .for_each(|(o, n)| *o = (*n).into());
+            println!("made it past 1 layer");
         }
         Ok(())
     }

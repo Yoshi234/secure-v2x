@@ -60,5 +60,5 @@ fn main() {
     let image_vec: Vec<f64> = NpyData::from_bytes(&buf).unwrap().to_vec();
     let image = Array4::from_shape_vec((1, 3, 32, 32), image_vec).unwrap();
 
-    experiments::inference::inference::run(network, architecture, image, class);
+    experiments::inference::inference::run(&network, &architecture, &image, class, "None", 0);
 }

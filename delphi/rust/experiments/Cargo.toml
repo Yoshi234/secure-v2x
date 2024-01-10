@@ -60,6 +60,10 @@ name = "minionn-accuracy"
 path = "src/validation/minionn/validate.rs"
 
 [[bin]]
+name = "resnet-sequential-inference"
+path = "src/inference/resnet/sequential_inference.rs"
+
+[[bin]]
 name = "resnet32-client"
 path = "src/latency/resnet32/client.rs"
 

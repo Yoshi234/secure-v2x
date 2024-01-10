@@ -50,9 +50,10 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     // ([num_samples, 1, 1, 384]) -> ([num_samples, 32, 1, 321])
     // tuple = (num_filters, num_channels, n_ker_height, n_ker_width )
     let kernel_dims = (32, 1, 1, 64);
+    println!("{:?}", input_dims);
     let conv = sample_conv_layer(vs, input_dims, kernel_dims, 1, Padding::Valid, rng).0;
     network.layers.push(Layer::LL(conv));
-
+    
     // // 2 (BATCH NORM LAYER)
     // // ([num_samples, 32, 1, 321]) -> ([num_samples, 32, 1, 321])
     // // TODO: Implement batch norm layer functionality for the neural network struct
@@ -73,13 +74,16 @@ pub fn construct_compact_cnn<R: RngCore + CryptoRng>(
     // Do we need to construct a separate GAP function for Delphi as well?
     // the window is 1, and the stride is 384
     let input_dims = network.layers.last().unwrap().output_dimensions();
-    let pool = sample_avg_pool_layer(input_dims, (1, 1), 384);
+    println!("{:?}",input_dims);
+    let pool = sample_avg_pool_layer(input_dims, (1, 321), 321);
     network.layers.push(Layer::LL(pool));
 
     // 6 (FULLY CONNECTED LAYER)
     let fc_input_dims = network.layers.last().unwrap().output_dimensions();
+    println!("{:?}",fc_input_dims);
     let (fc, _) = sample_fc_layer(vs, fc_input_dims, 2, rng);  
     network.layers.push(Layer::LL(fc));
+    println!("{:?}",network.layers.last().unwrap().output_dimensions());
     assert!(network.validate());
 
     network

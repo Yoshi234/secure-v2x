@@ -73,7 +73,7 @@ def identity_building_block(input_tensor, kernel_size, filters, stage, block, tr
                                         epsilon=BATCH_NORM_EPSILON)(
                                                 x, training=training)
 
-    x = Activation('relu')(x)
+    x = Activation('approx_activation')(x)
 
     x = Conv2D(filters2, kernel_size,
                             padding='same',
@@ -87,7 +87,7 @@ def identity_building_block(input_tensor, kernel_size, filters, stage, block, tr
                                         epsilon=BATCH_NORM_EPSILON)(
                                                 x, training=training)
     x = add([x, input_tensor])
-    x = Activation('relu')(x)
+    x = Activation('approx_activation')(x)
     return x
 
 
@@ -131,7 +131,7 @@ def conv_building_block(input_tensor, kernel_size, filters, stage, block, stride
                                         momentum=BATCH_NORM_DECAY,
                                         epsilon=BATCH_NORM_EPSILON)(
                                                 x, training=training)
-    x = Activation('relu')(x)
+    x = Activation('approx_activation')(x)
 
     x = Conv2D(filters2, kernel_size, padding='same',
                             kernel_initializer='he_normal',
@@ -156,7 +156,7 @@ def conv_building_block(input_tensor, kernel_size, filters, stage, block, stride
                     shortcut, training=training)
 
     x = add([x, shortcut])
-    x = Activation('relu')(x)
+    x = Activation('approx_activation')(x)
     return x
 
 
@@ -212,7 +212,7 @@ def build():
                                         momentum=BATCH_NORM_DECAY,
                                         epsilon=BATCH_NORM_EPSILON)(
                                                 x, training=training)
-    x = Activation('relu')(x)
+    x = Activation('approx_activation')(x)
 
     x = resnet_block(x, size=num_blocks, kernel_size=3, filters=[16, 16],
                                       stage=2, conv_strides=(1, 1), training=training)
@@ -235,3 +235,4 @@ def build():
     model = tf.keras.models.Model(inputs, x)
 
     return model
+

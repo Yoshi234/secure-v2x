@@ -104,6 +104,7 @@ pub fn construct_resnet_32<R: RngCore + CryptoRng>(
     use std::collections::HashSet;
     let mut relu_layers = Vec::new();
     let poly_layers = match num_poly {
+        0 => vec![],
         6 => vec![3, 5, 18, 19, 26, 27],
         12 => vec![1, 2, 7, 10, 11, 12, 14, 16, 20, 21, 24, 28],
         14 => vec![1, 2, 4, 5, 8, 9, 14, 16, 19, 20, 21, 24, 26, 29],

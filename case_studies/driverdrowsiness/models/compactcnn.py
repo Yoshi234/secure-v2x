@@ -31,6 +31,7 @@ class CompactCNN(torch.nn.Module):
 
         self.conv = torch.nn.Conv2d(1, channels, (1, kernelLength))
         self.batch = Batchlayer(channels)
+        #384 - 64 + 1 = 321
         self.GAP = torch.nn.AvgPool2d((1, sampleLength-kernelLength+1))
         self.fc = torch.nn.Linear(channels, classes)
         self.softmax = torch.nn.LogSoftmax(dim=1)
@@ -67,7 +68,6 @@ def normalizelayer(data, self):
         variance = self.running_var
     b = torch.div(data - mean, variance).expand(int(data.size(0)),
                                                 int(data.size(1)), int(data.size(2)), int(data.size(3)))
-
     return b
 
 

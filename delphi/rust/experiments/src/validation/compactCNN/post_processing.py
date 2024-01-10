@@ -6,26 +6,26 @@ Author: @Yoshi234
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def plot_latencies(srv_latencies, cli_latencies):
+def plot_latencies(srv_latencies, cli_latencies, run_num):
     latencies = pd.DataFrame({"server latency":srv_latencies, "client latency":cli_latencies})
     ax = latencies.plot(kind="box")
     ax.set_title("Latency Measures")
     ax.set_ylabel("Latency time")
-    plt.savefig("latencies.png")
+    plt.savefig("figures/latencies{}.png".format(run_num))
 
-def plot_preproc(srv_preproc, cli_preproc):
+def plot_preproc(srv_preproc, cli_preproc, run_num):
     preproc = pd.DataFrame({"server preprocessing":srv_preproc, "client preprocessing": cli_preproc})
     ax = preproc.plot(kind = "box")
     ax.set_title("Preprocessing Measures")
     ax.set_ylabel("Preprocessing time")
-    plt.savefig("preprocessing.png")
+    plt.savefig("figures/preprocessing{}.png".format(run_num))
 
-def plot_through_time(srv_totals, cli_totals):
+def plot_through_time(srv_totals, cli_totals, run_num):
     total = pd.DataFrame({"server totals":srv_totals, "client totals": cli_totals})
     ax = total.plot(kind = "box")
     ax.set_title("Throughput Measures")
     ax.set_ylabel("Throughput time")
-    plt.savefig("throughput_time.png")
+    plt.savefig("figures/throughput_time{}.png".format(run_num))
 
 def append_time(times_list, tracker_val, min_param, max_param, line):
         val = ""
@@ -49,7 +49,8 @@ def append_time(times_list, tracker_val, min_param, max_param, line):
         return (tracker_val, max_param, min_param, times_list)
 
 def main():
-    processing_output_file = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/compactCNN/validation_runs/validation_run1.txt"
+    run_number = "7"
+    processing_output_file = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/compactCNN/validation_runs/validation_run{}.txt".format(run_number)
     num_comp = 316
 
     srv_tot = 0
@@ -83,13 +84,8 @@ def main():
         cont = True
         cli_subtotal = 0
         srv_subtotal = 0
-        while cont == True:
-            line = ""
-            try:
-                line = f.readline()
-            except:
-                cont = False
-                continue
+        lines = f.readlines()
+        for line in lines:
             if "End:     Server online phase" in line:
                 server_latency, max_srv_lat, min_srv_lat, srv_latencies = append_time(srv_latencies, 
                                                                                       server_latency, 
@@ -129,16 +125,19 @@ def main():
                 srv_subtotal += srv_preprocessing[-1]
                 
 
-            if progress == num_comp: cont = False
+            # if progress == num_comp: cont = False
     
+    # get the number of observations read
+    num_comp = len(cli_totals)
+
     avg_cl_lat = client_latency / num_comp
     avg_srv_lat = server_latency / num_comp
     avg_cli_preproc = cli_preproc / num_comp
     avg_srv_preproc = srv_preproc / num_comp
-    srv_throughput = srv_tot/316
-    cli_throughput = cli_tot/316
+    srv_throughput = num_comp/srv_tot
+    cli_throughput = num_comp/cli_tot
 
-    with open("latency.txt", "w") as f:
+    with open("latency.txt{}".format(run_number), "w") as f:
         f.write("Avg Client Latency = {} s\n".format(avg_cl_lat))
         f.write("\tmax latency = {} s\n".format(max_cli_lat))
         f.write("\tmin latency = {} s\n".format(min_cli_lat))
@@ -154,9 +153,9 @@ def main():
         f.write("Server Throughput - {} s per process\n".format(srv_throughput))
         f.write("Client Throughput - {} s per process\n".format(cli_throughput))
     
-    plot_preproc(srv_preprocessing, cli_preprocessing)
-    plot_through_time(srv_totals, cli_totals)
-    
+    plot_preproc(srv_preprocessing, cli_preprocessing, run_number)
+    plot_through_time(srv_totals, cli_totals, run_number)
+    plot_latencies(srv_latencies, cli_latencies, run_number)
 
 if __name__ == "__main__":
     main()

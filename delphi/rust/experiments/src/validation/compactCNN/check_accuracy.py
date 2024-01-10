@@ -1,5 +1,6 @@
 def main():
-    file = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation/Classification_Results2.txt"
+    run = "7"
+    file = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/compactCNN/Eeg_Samples_and_Validation/Classification_Results{}.txt".format(run)
     x = []
     with open(file, 'r') as f:
         x = f.readlines()

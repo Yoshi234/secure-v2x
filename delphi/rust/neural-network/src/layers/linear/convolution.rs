@@ -58,15 +58,15 @@ where
         &self,
         (batch_size, in_channels, in_height, in_width): (usize, usize, usize, usize),
     ) -> (usize, usize, usize, usize) {
-        let (num, k_channels, k_height, _) = self.kernel.dim();
+        let (num, k_channels, k_height, k_width) = self.kernel.dim();
         let padding = match self.padding {
             Padding::Same => (k_height - 1) / 2,
             Padding::Valid => 0,
         };
         assert_eq!(k_channels, in_channels);
-        let k_size = k_height;
-        let out_height = (in_height - k_size + 2 * padding) / self.stride + 1;
-        let out_width = (in_width - k_size + 2 * padding) / self.stride + 1;
+        // let k_size = k_height;
+        let out_height = (in_height - k_height + 2 * padding) / self.stride + 1;
+        let out_width = (in_width - k_width + 2 * padding) / self.stride + 1;
         let out_channels = num;
         (batch_size, out_channels, out_height, out_width)
     }

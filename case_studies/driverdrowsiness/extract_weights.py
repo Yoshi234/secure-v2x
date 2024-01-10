@@ -32,18 +32,20 @@ def delphi_extract_weights(model_dict, save_path):
     var2 = interest_params["batch.running_var"]
 
     # transform necessary parameters
-    # gamma1 = interest_params["batch.gamma"].view([32,1,1,1])
-    # # gamma1 = gamma1.expand(int(conv.size(0)), int(conv.size(1)), int(conv.size(2)), int(conv.size(3)))
-    # gamma2 = gamma2.view([32])
-    # beta = beta.view([32])
-    # mean = mean.view([32])
-    # var1 = var1.view([32,1,1,1])
-    # var1 = var1.expand(int(conv.size(0)), int(conv.size(1)), int(conv.size(2)), int(conv.size(3)))
-    # var2 = var2.view([32])
+    gamma1 = interest_params["batch.gamma"].view([32,1,1,1])
+    # gamma1 = gamma1.expand(int(conv.size(0)), int(conv.size(1)), int(conv.size(2)), int(conv.size(3)))
+    gamma2 = gamma2.view([32])
+    beta = beta.view([32])
+    mean = mean.view([32])
+    var1 = var1.view([32,1,1,1])
+    var1 = var1.expand(int(conv.size(0)), int(conv.size(1)), int(conv.size(2)), int(conv.size(3)))
+    var2 = var2.view([32])
 
     # perform parameter value transformations
-    conv_fold = conv * (torch.div(gamma1, var1)).view(-1,1,1,1)# torch.div(gamma1 * conv, var1) 
-    bias_fold = (bias - mean) * torch.div(gamma1, var1) + beta# gamma2 * torch.div((bias - mean), var2) + beta
+    # conv_fold = conv * (torch.div(gamma1, var1)).view(-1,1,1,1)# torch.div(gamma1 * conv, var1) 
+    # bias_fold = (bias - mean) * torch.div(gamma1, var1) + beta# gamma2 * torch.div((bias - mean), var2) + beta
+    conv_fold = torch.div(gamma1 * conv, var1)
+    bias_fold = gamma2 * torch.div((bias - mean), var2) + beta
 
     # generate new parameters
     params.append(conv_fold.view(-1))

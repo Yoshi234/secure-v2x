@@ -50,6 +50,7 @@ pub enum LinearLayer<F, C> {
     },
     Identity {
         dims: LayerDims,
+        // params: IdentityParams<F, C>
     },
 }
 
