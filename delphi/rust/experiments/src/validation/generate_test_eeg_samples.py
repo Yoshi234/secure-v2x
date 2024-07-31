@@ -15,7 +15,7 @@ import numpy as np
 import os
 import random
 import sys
-from case_studies.driverdrowsiness.models.compactcnn import CompactCNN
+from models.compactcnn import CompactCNN
 # from python.python_models.compact_cnn import compact_cnn
 
 # debugging function
@@ -36,28 +36,45 @@ def print_torch_model_parameters(model):
 def build_model(type):
     """
     Construct model following the given architecture and approx layers
+    and export architecture to an onnx pretrained model file
     """
     my_net = None
     if type == "no_approx":
-        my_net = CompactCNN().double().cuda()
+        my_net = CompactCNN()
         my_net.load_state_dict(torch.load(
-            "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/pretrained/sub9/model.pth"))
+            "../../../../../case_studies/driverdrowsiness/pretrained/sub9/model.pth"))
     # elif type == "approx":
     #     my_net = compact_cnn_approximation().double().cuda()
     #     my_net.load_state_dict(torch.load(
     #         "/home/ala22014/V2V-Delphi-Applications/python/pretrained_model_weights/pretrained_torch_models/torch_models_with_poly_approx_relu/model_subj_9_seed0.pth"))
     my_net.train(False)
+    
+    from torch.onnx import OperatorExportTypes
+    _OPSET_VERSION = 17
+
+    dummy_input = torch.empty((1, 1, 1, 384))
+
+    kwargs = {
+        "do_constant_folding": False,
+        "export_params": True,
+        "input_names": ["input"],
+        "operator_export_type": OperatorExportTypes.ONNX,
+        "output_names": ["output"],
+        "opset_version": _OPSET_VERSION
+    }
+    # export model to onnx as well
+    torch.onnx.export(my_net, dummy_input, "compactCNN/onnx/compactcnn.onnx", **kwargs)
 
     return my_net
 
 
-def generate_eeg_data(num_samples, dataset, eeg_data_path=None):
+def generate_eeg_data(num_samples, dataset, eeg_data_path=None, flatten=True):
     """
     Get the 314 eeg test samples into scope
     """
     # load the dataset into scope
     if eeg_data_path == None:
-        eeg_data_path = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/Eeg_Samples_and_Validation"
+        eeg_data_path = "compactCNN/Eeg_Samples_and_Validation"
 
     xdata = np.array(dataset['EEGsample'])
     label = np.array(dataset['substate'])
@@ -88,14 +105,27 @@ def generate_eeg_data(num_samples, dataset, eeg_data_path=None):
     x_test = xtest.reshape(xtest.shape[0], 1, channelnum, samplelength*sf)
     # y_test = classes
     y_test = ydata[testindx]
+    
+    if num_samples > xdata.shape[0]: num_samples = xdata.shape[0]
 
-    for i, eeg_sample in enumerate(x_test):
-        np.save(os.path.join(eeg_data_path,
-                f"eeg_sample_{i}.npy"), eeg_sample.flatten().astype(np.float64))
-        print(eeg_sample.flatten().astype(np.float64).shape)
-    print(y_test.flatten().astype(np.int64).shape)
-    np.save(path.join(eeg_data_path, f"classes.npy"),
-            y_test.flatten().astype(np.int64))
+    for i in range(num_samples):
+        if flatten: 
+            np.save(os.path.join(eeg_data_path,
+                    f"eeg_sample_{i}.npy"), x_test[i].flatten().astype(np.float64))
+            # print(x_test[i].flatten().astype(np.float64).shape)
+        elif not flatten:
+            np.save(os.path.join(eeg_data_path,
+                    f"eeg_sample_{i}.npy"), x_test[i].astype(np.float64).reshape(1,1,1,384))
+            # print(x_test[i].astype(np.float64).reshape(1,1,1,384).shape)
+            
+    if flatten:
+        # print(y_test.flatten().astype(np.int64).shape)
+        np.save(path.join(eeg_data_path, f"classes.npy"),
+                y_test.flatten().astype(np.int64))
+    else: # don't flatten numpy arrays
+        # print(y_test.astype(np.int64).shape)
+        np.save(path.join(eeg_data_path, f"classes.npy"),
+                y_test.astype(np.int64))
 
 
 def test_network(model, eeg_data_path=None):
@@ -134,7 +164,7 @@ if __name__ == "__main__":
     # load dataset -- figure out which location to put the files in later
     # eeg_data_path = "/home/ala22014/V2V-Delphi-Applications/delphi/rust/experiments/src/validation/eeg_test_samples_subject9"
     dataset = sio.loadmat(
-        "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/data/dataset.mat")
+        "../../../../../case_studies/driverdrowsiness/data/dataset.mat")
 
     if len(sys.argv) < 2:
         print("Usage: {sys.agrv[0]} model_type")
@@ -147,5 +177,5 @@ if __name__ == "__main__":
     model = build_model(type=type)
 
     # pass the loaded dataset as an argument to the data generation function
-    generate_eeg_data(num_samples=314, dataset=dataset)
-    print(f"Accuracy: {test_network(model)}")
+    generate_eeg_data(num_samples=314, dataset=dataset, eeg_data_path="compactCNN/cryptflow_eeg_samples", flatten=False) 
+    # print(f"Accuracy: {test_network(model)}") 

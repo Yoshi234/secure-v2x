@@ -1,7 +1,9 @@
 def main():
-    run = 1
+    run = 7
+    file2_name = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/dev_work/experiments/Classification_Results{}.txt".format(run)
+    file3_name = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/dev_work/experiments/output9-crypten.txt"
     f1_name = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/dev_work/experiments/output9.txt"
-    f2_name = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/dev_work/experiments/Classification_Results{}.txt".format(run)
+    f2_name = file2_name
     file_1 = []
     file_2 = []
 
@@ -95,6 +97,18 @@ def main():
     print("python model npp: {}".format(tn1/(tn1 + fn1)))
     print("delphi acc: {}".format((tn + tp)/(tn + tp + fp + fn)))
     print("python acc: {}".format((tn1 + tp1)/(tn1 + tp1 + fp1 + fn1)))
+
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    f1 = (2 * precision * recall)/(precision + recall)
+
+    print("delphi - f1 score: {}".format(f1))
+
+    pyprec = tp1 / (tp1 + fp1)
+    pyrecall = tp1 / (tp1 + fn1)
+    pyf1 = (2 * pyprec * pyrecall) / (pyprec + pyrecall)
+
+    print("plaintext f1 score: {}".format(pyf1))
 
     percent = count/n
     print("ones count: {}".format(ones_count))
