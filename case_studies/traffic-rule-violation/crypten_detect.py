@@ -39,6 +39,8 @@ import pickle
 import multiprocessing as mp
 from ultralytics.utils.plotting import Annotator, colors, save_one_box
 import logging
+import warnings
+warnings.filterwarnings("ignore")
 
 # libs
 import onnx
@@ -84,7 +86,9 @@ def secure_run(
     classes=None,                       # bool indicating how to filter class detections
     agnostic_nms=None,                  # bool (if true) performs class agnostic nms
     run_num=0,                          # label for the inference run
-    model='yolov5s'
+    model='yolov5s',
+    folder='sec_outs',
+    debug=False
 ):
     """ 
     Runs the Yolov5s model in CrypTen. A separate (2-party process) 
@@ -130,7 +134,7 @@ def secure_run(
     
     print("[DEBUG]: image 0 size = {}".format(im0.shape))
     
-    im = letterbox(im0, imgsz, stride=stride, auto=False, scaleFill=True)[0]
+    im = letterbox(im0, imgsz, stride=stride, auto=False, scaleFill=False)[0]
     im = im.transpose((2, 0, 1))[::-1]
     im = np.ascontiguousarray(im)
     
@@ -165,11 +169,11 @@ def secure_run(
                 print("[INFO-main]: Waiting on Exec.")
                 time.sleep(30)
                 
-        with open("experiments/sec_outs/run_{}.pkl".format(run_num), 'rb') as f:
+        with open("experiments/{}/run_{}.pkl".format(folder, run_num), 'rb') as f:
             res_pkl = pickle.load(f)
         pred, start, end = res_pkl # should be a list of this format
         
-        with open("experiments/sec_outs/run_{}.pkl".format(run_num), 'rb') as f:
+        with open("experiments/{}/run_{}.pkl".format(folder, run_num), 'rb') as f:
             res_pkl = pickle.load(f)
         pred, start, end = res_pkl # should be a list of this format
         
@@ -201,23 +205,39 @@ def secure_run(
             "data_path":"source/crypten_source/walkway.pth",
             "run_label":run_num,
             "batch_size":1,
-            "device": device
+            "device": device, 
+            "folder": folder,
+            'debug': debug
         }
         multiproc_gpu(_run_sec_model, 'gpu_attempt', args=yolo_args)
-        with open("experiments/gpu_sec_outs/run_{}.pkl".format(run_num), 'rb') as f:
+        with open("experiments/{}/run_{}.pkl".format(folder, run_num), 'rb') as f:
             res_pkl = pickle.load(f)
         pred, start, end = res_pkl # should be a list of this format
+        
+        with open("experiments/crypten_tmp/comm_tmp_0.pkl", 'rb') as com_0:
+            alice_com = pickle.load(com_0)
+        with open("experiments/crypten_tmp/comm_tmp_1.pkl", 'rb') as com_1:
+            bob_com = pickle.load(com_1)
+            
+        # bob_com and alice_com are dictionaries of format {'rounds':int, '}
+        com_costs = (alice_com['bytes'] + bob_com['bytes'])/(2e6) # output in MB
+        rounds = (alice_com['rounds'] + bob_com['rounds'])/2
         print("[INFO]: inference time = {} seconds for img size = {}".format(end - start, imgsz))
+        print("[INFO]: communication cost = {} MB".format(com_costs))
+        print("[INFO]: communication rounds = {}".format(rounds))
         
     elif (not secure) and hub:
         start = time.time()
         pred = hub_model(image_tensor[None])
         end = time.time()
-        print("[DEBUG]: Size of pred output = {}".format(pred.shape))
+        # print("[DEBUG]: Size of pred output = {}".format(pred.shape))
         
-        # DEBUG
-        print(pred)
-
+        # Save results
+        print("[INFO]: Saving Results ...")
+        if not "run_{}.pkl".format(run_num) in os.listdir("experiments/{}".format(folder)):
+            with open("experiments/{}/run_{}.pkl".format(folder, run_num), 'wb') as pkl_file:
+                pickle.dump([pred, start, end], pkl_file)
+    
     else: # NOTE: this won't work for the secure version. just use the hub model
         start = time.time()
         pred = model(image_tensor[None])
@@ -232,6 +252,11 @@ def secure_run(
         for item in pred: print(item)
         
     print("[INFO]: torch hub model output\n{}".format(pred))
+    
+    if secure:
+        with open("experiments/crypten_tmp/comm_tmp_0.pkl", 'rb') as f:
+            comm_cost = pickle.load(f)
+            print('[INFO]: communication expenditure {}'.format(comm_cost))
     # print("[INFO]: output shape = {}".format(pred.shape))
     # print("[DEBUG]: raw prediction output={} - time={}".format(len(pred), end-start))
     # print("\t[DEBUG]: output [0]:\n\t {}\n\t (shape)={}".format(pred[0], pred[0].shape))
@@ -329,6 +354,7 @@ def encrypt_run(plaintext_model, dat_path, imgsz, run=0):
     if not "run_{}.pkl".format(run) in os.listdir("experiments/sec_outs"):
         with open(pkl_str, 'wb') as pkl_file:
             pickle.dump([pred_dec, start, end], pkl_file)
+            
     
     return []
             
@@ -368,6 +394,7 @@ def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_
     print("[DEBUG]: im.shape = {}".format(im.shape))
 
     print("[DEBUG]: im.shape[1:] = {}".format(im.shape[1:]))
+    print(f'[INFO]: im.shape[1:] = {im.shape[1:]} | im0.shape = {im0.shape}')
     pred[:,:4] = scale_boxes(im.shape[1:], pred[:,:4], im0.shape).round()
 
     # class filter for the thing
@@ -391,18 +418,33 @@ def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_
 # by 32 or the execution will fail due to incorrect 
 # sizes  
 def main():
-    mod='yolov5s'
-    run = '320_320-walkway-cpu-{}'.format(mod)
-    size = (192,320) # what happens with a square size for this image?
+    device='cpu'
     img = 'walkway.png'
+    im_name = img.split('.')[0]
+    folder='sec_outs'
+    mod='yolov5n'
+    size = (288,288) # what happens with a square size for this image?
+    secure=True
+    
+    run = '{}_{}-{}-{}-{}-{}'.format(size[0], size[1], im_name, device, mod, folder)
+    
+    # add the correct run number if one with the same name already exists
+    if 'run_{}.pkl'.format(run) in os.listdir("experiments/{}".format(folder)):
+        count = 0
+        for i in os.listdir("experiments/{}".format(folder)):
+            if run in i: count += 1
+        run = '{}-{}'.format(run, count)
+        
     secure_run(img_file=img, 
-               device='cpu',
+               device=device,
                model=mod, 
                imgsz=size,
                run_num=run,
-               secure=True, 
-               hub=True)
-    sample_proc_output(imgsz=size, folder="gpu_sec_outs", run_val=run, img_name=img)
+               secure=secure, 
+               hub=True,
+               folder=folder,
+               debug=False)
+    sample_proc_output(imgsz=size, folder=folder, run_val=run, img_name=img)
     
     # shrinking the image size from 640 x 640 to 480 x 480 
     # reduces inference time by a factor of 2 without affecting
@@ -461,7 +503,7 @@ if __name__ == "__main__":
     # does the torch.hub.load model include nmx?
     
     mp.set_start_method("spawn")
-    main()
+    sample_proc_output()
     # export_detect_model()
     
     ## Resolution Reduction + Results

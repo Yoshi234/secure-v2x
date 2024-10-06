@@ -1,7 +1,7 @@
 import os
 
 def main():
-    run_number=7
+    run_number=8
     weights_path = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/case_studies/driverdrowsiness/pretrained/sub9/model.npy"
     approx_layers = 0
     eeg_test_data_path = "/home/jjl20011/snap/snapd-desktop-integration/current/Lab/Projects/Project1-V2X-Secure2PC/v2x-delphi-2pc/delphi/rust/experiments/src/validation/compactCNN/Eeg_Samples_and_Validation"
