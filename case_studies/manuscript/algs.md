@@ -1,5 +1,15 @@
 # Algorithm Sketches
 
+The algorithms need to be edited in several places: 
+
+1. edit the secret share generation lines - make this more concise - 
+   how can we shorten this bit to make a bit more clear
+2. edit the secret reconstruction - say something like, $P_{1}$ sends his 
+   shares to $P_{0}$ who reconstructs their shares 
+3. create a dictionary object in the yolo algorithm which holds the 
+   specific elements we use for later levels with the key they are 
+   interested in and then just pull it if needed for the concatenation. 
+
 ## CryptoDrowsy
 
 $$
@@ -102,6 +112,10 @@ $$
   layer which is conducted at the same tree (hierarchy) level for $i$.
 
 # Primitive Sub-Protocols
+
+Don't bother with explaining the specifics of CrypTen-defined sub-protocols, simply 
+explain what each of the high level (bundeled sub-protocols does later 
+after the main body is written)
 
 ## CrypTenBN
 
