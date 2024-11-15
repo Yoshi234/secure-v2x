@@ -1,4 +1,4 @@
-# V2V-Delphi-Applications
+# V2X-2PC-Applications
 ---
 ## Repository contains code for secure 2-party inference schemes of the following applications (using Delphi)
 ---
