@@ -15,3 +15,6 @@
 3. Include instructions for accessing the data utilized for this work (make sure this is robust)
 4. Update fully-automated RLR detection script, and move into the main v2x-delphi-2pc repo
    (the repo needs to be renamed as well to "v2x-2pc" or something)
+
+For this code to work, we need to run all scripts from the case_studies package as a 
+relative call now. This is because I have restructured everything as a package format.

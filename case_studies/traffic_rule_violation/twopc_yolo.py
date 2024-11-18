@@ -24,6 +24,11 @@ def run_2pc_yolo(args:dict):
 
     # does moving the model to the gpu after encrypting mess it up?
     sec_model = crypten.nn.from_pytorch(args['model'], dummy_input).encrypt(src=ALICE).to(args['device'])
+    if 'print_net' in args:
+        if args['print_net'] == True: 
+            print("[INFO]: input names = {}".format(sec_model.input_names))
+            for name, cur_mod in sec_model._modules.items():
+                print("[INFO]: name =\t{} module =\t{}".format(name, cur_mod))
     
     # print("[DEBUG-twopc_yolo.py - 24]: type of sec_model = {}".format(type(sec_model)))
     sec_model.eval()
@@ -40,6 +45,7 @@ def run_2pc_yolo(args:dict):
     # decrypt output for the data holder, but not the server
     rank = comm.get().get_rank()
     
+    # saves result data to the specific crypten_tmp folder in question with the run label given
     pkl_str = "experiments/{}/run_{}.pkl".format(args['folder'], args['run_label'])
     pred_dec = pred.get_plain_text(dst=BOB) # only BOB should get the output set "dst=BOB"
     

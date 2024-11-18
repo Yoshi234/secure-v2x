@@ -5,6 +5,7 @@ import time
 import pickle
 
 # libs
+from .models.crypten_compactcnn import CryptenCompactCNN
 import crypten
 import crypten.communicator as comm
 import torch
@@ -19,6 +20,9 @@ def run_2pc_compactcnn(args:dict):
     Load the pytorch architecture and CompactCNN's pretrained weights
     to run secure inference
     '''
+    # drowsy_mod = CryptenCompactCNN() # set arch
+    # drowsy_mod.load_state_dict(torch.load(args['drowsy_mod'], map_location='cpu')) 
+    
     crypten.init()
     dummy_input = torch.empty(args['batch_size'],1,*args['img_size'])
 

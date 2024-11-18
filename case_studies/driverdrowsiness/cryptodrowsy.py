@@ -22,7 +22,7 @@ from examples.multiprocess_launcher import MultiProcessLauncher
 import torchvision
 
 # model
-from models.crypten_compactcnn import CryptenCompactCNN
+from .models.crypten_compactcnn import CryptenCompactCNN
 
 def _run_sec_drowsy_model(args:dict):
     '''
@@ -30,7 +30,7 @@ def _run_sec_drowsy_model(args:dict):
     variables for the yolo runs
     '''
     # import function to run the independent processes
-    from twopc_compactcnn import run_2pc_compactcnn
+    from .twopc_compactcnn import run_2pc_compactcnn
     
     level = logging.INFO
     if "RANK" in os.environ and os.environ["RANK"] != "0":

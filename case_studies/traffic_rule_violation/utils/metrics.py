@@ -9,8 +9,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 
-from utils import TryExcept, threaded
-
+try:
+    from . import TryExcept, threaded
+except ImportError:
+    from utils import TryExcept, threaded
 
 def fitness(x):
     """Calculates fitness of a model using weighted sum of metrics P, R, mAP@0.5, mAP@0.5:0.95."""

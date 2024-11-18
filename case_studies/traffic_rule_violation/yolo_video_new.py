@@ -5,22 +5,22 @@ import imutils
 import time
 import cv2
 import os
-import trafficLightColor
+from . import trafficLightColor
 
 # Additional Packages Needed (added implementation)
 import sys
 import torch
-from utils.general import (
+from .utils.general import (
     non_max_suppression, scale_boxes, xywh2xyxy, 
     xyxy2xywh
 )
 from ultralytics.utils.plotting import Annotator
 from ultralytics.utils.plotting import colors as colors_extra
-from utils.augmentations import letterbox
+from .utils.augmentations import letterbox
 import pickle
 import warnings
 import crypten.communicator as comm
-from crypten_detect import multiproc_gpu, _run_sec_model
+from .crypten_detect import multiproc_gpu, _run_sec_model
 
 # GLOBAL
 # object trackers got to work by using 
@@ -148,8 +148,13 @@ def setLightCoordinates(
         # yolo model of choice. This method simply transforms the image as desired
         
         # add fourth dimension (singleton) for inference
+        if debug: 
+            print("[DEBUG]: frame = {}".format(frame))
+            print("[DEBUG]: frame.shape = {}".format(frame.shape))
+            
+            
         im_tensor = read_im_frame(frame, imgsize, stride=net.stride).unsqueeze(0) 
-        
+    
         if debug: 
             print("[DEBUG-147]: im_tensor.shape = {}".format(im_tensor.shape))
             print("[DEBUG-147]: im_tensor values: \n\t{}".format(im_tensor))
@@ -726,7 +731,7 @@ def rlr_detect(
     listAll = []
     
     print("[INFO] Attempting to get light coordinates")
-    xlight, ylight, wlight, hlight = setLightCoordinates(args=args, net_type=big_net, colors=colors, secure=secure, imgsize=(672,672), debug=False)
+    xlight, ylight, wlight, hlight = setLightCoordinates(args=args, net_type=big_net, colors=colors, secure=secure, imgsize=(672,672), debug=debug)
     print("[INFO]: light coordinates\n\t x={} y={} w={} h={}".format(xlight, ylight, wlight, hlight))
     
     ctr = 0
@@ -1251,7 +1256,7 @@ def run(
     model_type='yolov5s', 
     confidence=0.5, 
     iou_thres=0.3, 
-    video_path='../../../Fully-Automated-red-light-Violation-Detection/videos/aziz2.MP4', 
+    video_path='../../Fully-Automated-red-light-Violation-Detection/videos/aziz2.MP4', 
     n_labels=80
 ):    
     vid_name = video_path.split("/")[-1] # get file name

@@ -1,6 +1,4 @@
 '''
-Author: Yoshi234 7/25/24
-
 Validation of YOLOv5 models on the COCO validation data set
 Follows from the yolov5/val.py validation script. See 
 https://github.com/ultralytics/yolov5/blob/master/val.py 
@@ -9,18 +7,32 @@ running on a single GPU. Custom implementation of modules is
 required in order to process YOLO in CrypTen. 
 '''
 
+# handle module and non-module import strategies
+try:
+    from .utils.general import (
+        cv2, non_max_suppression, scale_boxes, check_dataset, xywh2xyxy
+    )
+    from .utils.augmentations import letterbox
+    from .utils.metrics import box_iou, ap_per_class
+    from tqdm import tqdm
+    # scripts
+    from .crypten_detect import multiproc_gpu, _run_sec_model
+except ImportError: 
+    from utils.general import (
+        cv2, non_max_suppression, scale_boxes, check_dataset, xywh2xyxy
+    )
+    from utils.augmentations import letterbox
+    from utils.metrics import box_iou, ap_per_class
+    from tqdm import tqdm
+    from crypten_detect import multiproc_gpu, _run_sec_model
+    
 # utils
 import threading
 import pandas as pd
 import os
 # import argparse
 # from utils.torch_utils import select_device
-from utils.general import (
-    cv2, non_max_suppression, scale_boxes, check_dataset, xywh2xyxy
-)
-from utils.augmentations import letterbox
-from utils.metrics import box_iou, ap_per_class
-from tqdm import tqdm
+# module import 
 import time
 import pickle
 import multiprocessing as mp
@@ -40,8 +52,7 @@ import numpy as np
 # from examples.multiprocess_launcher import MultiProcessLauncher
 import torchvision
 
-# scripts
-from crypten_detect import multiproc_gpu, _run_sec_model
+
 
 # NOT NECESSARY - DELETE AFTER VERIFYING THE FUNCTIONALITY OF VALIDATION
 # class img_info:
@@ -378,7 +389,9 @@ def run_val(
     img_size=None,
     num_batches=None,  # source folder to hold .pth versions of img batches
     debug=False,       # prints the prediction tensor outputs for debug purposes
-    vehicle_only=True  # only record per-class ap metrics for vehicle classes
+    vehicle_only=True, # only record per-class ap metrics for vehicle classes
+    get_stats=False,   # returns the stats object which is used to compute AP values if desired
+    print_net=False
 ):
     '''
     NOTE: although the authors of CrypTen claim GPU support is 
@@ -410,6 +423,9 @@ def run_val(
     
     lbs_files = os.listdir(lbs_folder) # set file names
     imgs_files = os.listdir(imgs_folder)
+    if debug:
+        print('[DEBUG]: len lbs_files = {}'.format(len(lbs_files)))
+        print('[DEBUG]: len imgs_files = {}'.format(len(imgs_files)))
     
     labels = [] # list of label tensors
     
@@ -511,7 +527,8 @@ def run_val(
                 "batch_size":batch_shape,
                 "folder":"crypten_tmp",
                 "device":device,
-                "debug":True
+                "debug":True,
+                "print_net":True
             }
             multiproc_gpu(_run_sec_model, f'{device}_val', args=yolo_args)
             with open("experiments/crypten_tmp/run_{}.pkl".format(batch_idx), "rb") as f: # read results from pickle file
@@ -559,7 +576,7 @@ def run_val(
     
     inf_count=0
     for i in range(n_batches): inf_count += len(im_batches[i])
-    assert len(detections) == inf_count, "[ERROR-554]: labels / detections don't match -> labels={}, detections={}".format(inf_count, len(detections))
+    assert len(detections) == inf_count, "[ERROR-574]: labels / detections don't match -> labels={}, detections={}".format(inf_count, len(detections))
     
     for i in range(len(detections)): # format detection result metrics
         num_dets.append(detections[i].shape[0]) # count the number of predictions from the input image
@@ -648,6 +665,7 @@ def run_val(
                                                                                 img_size[1],
                                                                                 model_name,
                                                                                 batch_size))
+    return stats
 
 def set_sizes(mult=32, start=5, max=20):
     sizes = []
@@ -947,23 +965,29 @@ def test_single():
     results.to_csv("experiments/batched_val/single_eval.csv")
     
 if __name__ == "__main__":
+    import pickle as pkl
     import multiprocessing as mp
-    mp.set_start_method("spawn") # set thread start method for crypten 
-        
-    main()
-    
-    # os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-    # run_val(
-    #     exp_folder='gpu_exps', 
-    #     img_size=(288,288), 
-    #     debug=True,
-    #     lbs_folder='/mnt/nvme1n1p1/data/coco128/coco128/labels/train2017',
-    #     imgs_folder='/mnt/nvme1n1p1/data/coco128/coco128/images/train2017',
-    #     device='cuda',
-    #     model_name='yolov5n',
-    #     plain=False,
-    #     results_name='test_environ_var'
-    # )
+    mp.set_start_method("spawn") # set thread start method for crypten     
+    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+    stats = run_val(
+        exp_folder='gpu_exps', 
+        img_size=(288,288), 
+        debug=True,
+        lbs_folder='/mnt/nvme1n1p1/data/coco128/coco128/labels/train2017',
+        imgs_folder='/mnt/nvme1n1p1/data/coco128/coco128/images/train2017',
+        device='cuda',
+        model_name='yolov5n',
+        plain=False,
+        results_name='test_gpu_environ',
+        num_batches=1,
+        get_stats=True,
+        batch_size=1,
+        print_net=True
+    )
+    print("[INFO]: ... STATS ...")
+    with open("experiments/gpu_exps/acc_info.pkl", 'wb') as f:
+        pkl.dump(stats, f)
+    print('[INFO]: stats saved ...')
     
     # const_params = {"batch_size":1, "img_size":(1000,300), 'folder':'model_type_exps', "num_batches":32}
     # faster_rcnn_val(

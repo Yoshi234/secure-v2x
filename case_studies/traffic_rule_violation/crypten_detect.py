@@ -26,13 +26,21 @@ conda activate crypten_env
 # save a set of images from one of the test videos and run it through
 # the yolov5s object detector or just download a test image from the 
 # yolov5 repository (preferred)
+# from .utils.torch_utils import select_device
 
+# handle non-module imports
+try:
+    from .utils.general import cv2, non_max_suppression, scale_boxes
+    from .utils.augmentations import letterbox
+    from .models.common import DetectMultiBackend, AutoShape
+except:
+    from utils.general import cv2, non_max_suppression, scale_boxes
+    from utils.augmentations import letterbox
+    from models.common import DetectMultiBackend, AutoShape
+    
 # utils
 import os
 import argparse
-from utils.torch_utils import select_device
-from utils.general import cv2, non_max_suppression, scale_boxes
-from utils.augmentations import letterbox
 from tqdm import tqdm
 import time
 import pickle
@@ -48,7 +56,7 @@ import crypten
 import crypten.mpc as mpc
 import crypten.communicator as comm
 import torch
-from models.common import DetectMultiBackend, AutoShape
+
 import numpy as np
 from examples.multiprocess_launcher import MultiProcessLauncher
 
@@ -110,7 +118,7 @@ def secure_run(
     """
     # disables OpenMP threads -- needed by @mpc.run_multiprocess which uses fork
     # torch.set_num_threads(1) 
-    device=select_device(device)
+    # device=select_device(device)
     
     # does this require nms on the output? I don't think so
     hub_model = torch.hub.load('ultralytics/yolov5', model, force_reload=True, trust_repo=True)
@@ -277,7 +285,10 @@ def _run_sec_model(args:dict):
     variables for the yolo runs
     '''
     # import function to run the independent processes
-    from twopc_yolo import run_2pc_yolo
+    try:
+        from .twopc_yolo import run_2pc_yolo
+    except ImportError:
+        from twopc_yolo import run_2pc_yolo
     
     level = logging.INFO
     if "RANK" in os.environ and os.environ["RANK"] != "0":
@@ -354,9 +365,6 @@ def encrypt_run(plaintext_model, dat_path, imgsz, run=0):
     if not "run_{}.pkl".format(run) in os.listdir("experiments/sec_outs"):
         with open(pkl_str, 'wb') as pkl_file:
             pickle.dump([pred_dec, start, end], pkl_file)
-            
-    
-    return []
             
 def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_name='bus.jpg'):
     with open("experiments/{}/run_{}.pkl".format(folder, run_val), 'rb') as f:
@@ -474,7 +482,7 @@ def export_detect_model():
     
     check that this is the correct model
     '''
-    from models.experimental import attempt_load
+    from .models.experimental import attempt_load
     from torch.onnx import OperatorExportTypes
     _OPSET_VERSION = 17
     
@@ -503,7 +511,7 @@ if __name__ == "__main__":
     # does the torch.hub.load model include nmx?
     
     mp.set_start_method("spawn")
-    sample_proc_output()
+    secure_run()
     # export_detect_model()
     
     ## Resolution Reduction + Results

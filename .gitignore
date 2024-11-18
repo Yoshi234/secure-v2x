@@ -1,5 +1,6 @@
 repo_token
 EzPC
+.vscode
 case_studies/driverdrowsiness/__pycache__
 case_studies/traffic_rule_violation/source/*
 case_studies/traffic_rule_prediction/plaintext
