@@ -63,6 +63,7 @@ case_studies/traffic_rule_violation/yolov5s_detect.onnx
 case_studies/traffic_rule_violation/yolov5s.onnx
 case_studies/traffic_rule_violation/yolov5s.pt
 case_studies/traffic_rule_violation/yolov5x.pt
+case_studies/traffic_rule_violation/pretrained
 
 # multi-agent implementation
 case_studies/rlr_agent_src
