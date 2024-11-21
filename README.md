@@ -32,7 +32,80 @@ framework, please follow these steps:
    care to correctly locate the original `module.py` file and replace
    it with the updated code**
 
+Next, run `pip install requirements.txt` to install the required packages for SecureV2X. 
+The most recent version of each should work with our code. 
+
+### Scalability Simulations
+
+We evaluate the scalability of SecureV2X to a network of clients by running multiple 
+instances of CryptoDrowsy and FastSec-YOLO simultaneously. These simulations are 
+conducted in `agent_sim.py` and will require the following steps to execute 
+properly. 
+
+1. Navigate to [this repository](https://github.com/AhmadYahya97/Fully-Automated-red-light-Violation-Detection)
+   and download `y2.mp4` directly from the `videos` folder. Store this video file
+   in `case_studies` to perform multi-client secure inference. 
+2. Run `python3 agent_sim.py y2.mp4` in `case_studies` to run multi-client inference. 
+3. check the output results in `experiments/agg_results.csv` where 
+   + `exp` = (x-y) pairs where x is the number of cryptodrowsy clients run and y is the number of 
+     fastsec-yolo clients run
+   + `d_inf_time` = time required for each CryptoDrowsy inference (on average)
+   + `r_inf_time` = time required for each FastSec-YOLO client inference (on average)
+     from a batch of 4 video frames from `y2.mp4`
+
+Note the output results correspond to section 5.3 from the associated paper. 
+
 ## CryptoDrowsy
+
+Three core results are provided for CryptoDrowsy - namely running time (over the CPU) 
+in addition to communication cost and rounds required per inference.
+To reproduce the results we provide in the paper, please navigate to 
+`case_studies` and run `python3 run_cryptodrowsy`. This will perform inference
+over each of the 314 (3-second 128Hz) eeg samples corresponding to subject 9
+as studied in [this paper](https://arxiv.org/abs/2106.00613).
+The accuracy, communication, round complexity, and timing results will be reported
+to the CLI. As was done in the prior work, we have pretrained a model for each 
+of the 11 test subjects, and have included their respective labels and features
+as well. `run_cryptodrowsy.py` sets subject 9 as the default. However, if you 
+would like to run inference for any one of the other 10 subjects, simply 
+change `sub9` to `subx` where $x$ is any number from 1 to 11 (inclusive). 
+Likewise, change `9-drowsy_features.pth` and `9-drowsy_labels.pth` 
+to `x-drowsy_features.pth` and `x-drowsy_labels.pth` where `x` is the same
+as for `subx`. 
+
+In order to reproduce private inference over CompactCNN using Delphi, 
+first, install rust and then run the following commands:
+
+```
+sudo apt install cmake pkg-config g++ gcc libssl-dev libclang-dev
+rustup install nightly
+```
+
+Next, navigate to `delphi/rust/experiments/src/validation/compactCNN/validation` and 
+run `python3 run_validation.py`. If an error occurs, please carefully check to make
+sure that all of the paths listed in `run_validation.py` are correct. 
+Before running this functionality
+
++ `weights_path` - `case_studies/driverdrowsiness/pretrained/sub9/model.npy`
++ `eeg_test_data_path` - folder containing all of the .npy data samples for CompactCNN
+  + default value - `delphi/rust/experiments/src/validation/compactCNN/Eeg_Samples_and_Validation`
+    given as a relative path from `delphi/rust/experiments/src/inference`
++ `num_samples` - max of 314 - recommend a lower number - all 314 may take at least 
+  8 hours to run all 314 samples.
++ `accuracy_results_path` - relative path from `delphi/rust/experiments/src/inference` to 
+  `delphi/rust/experiments/src/validation/compactCNN/Eeg_Samples_and_Validation/Classification_ResultsX.txt`
++ `output_file` - will divert text output of delphi run to a saved text file. By default, this 
+  is set as the relative path to `delphi/rust/experiments/src/validation/compactCNN/validation_runs/vlaidation_runX.txt` from `delphi/rust/experiments/src/inference/`
+
+Don't be alarmed if a connection refused error occurs during the run. Simply restart
+the process. If you intend to run all 314 samples, you will want to check 
+`delphi/rust/experiments/src/inference/compactCNN/sequential_inference.rs` to adjust
+values for the range of samples to run if you have already run several by the 
+time a connection refused error occurs. 
+
+In order to run CompactCNN on CrypTFlow2, you will need to clone [EzPC](https://github.com/mpc-msri/EzPC)
+and use the custom compiler they provide to compile a secure version of CompactCNN. Follow the 
+instructions provided for running **SCI** at the link. 
 
 ## FastSec-YOLO
 
@@ -65,9 +138,13 @@ Our experiments for FastSec-YOLO can be reproduced as follows:
    set, and `<images_folder>` contains the actual images for the coco128 image
    dataset. 
 
+Image and batch size experiments can be reproduced by chnaging "benchmark" to 
+either "batch_size" or "img_size" for batch and image size experiments respectively.
 The results of this experiment will be output to `case_studies/traffic_rule_violation/experiments/model_type_exps`
 where each file in that folder is a `.csv` file containing the results of both plaintext
-and secure inference over coco128 for each model (yolov5: n, s, m, l, x)
+and secure inference over coco128 for each model (yolov5: n, s, m, l, x).
+❗Note that results may differ from those reported in the associated paper due to 
+computational machinery differences. 
 
 <!-- ## TODO: 8/5/24
 

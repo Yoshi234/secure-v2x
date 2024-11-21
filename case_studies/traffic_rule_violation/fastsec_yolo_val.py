@@ -520,7 +520,7 @@ def run_val(
                 alice_com = pickle.load(com_0)
             with open("experiments/crypten_tmp/comm_tmp_1.pkl", "rb") as com_1:
                 bob_com = pickle.load(com_1)
-            cost = (alice_com['bytes'] + bob_com['bytes'])/(2e6) # convert to MB
+            cost = (alice_com['bytes'] + bob_com['bytes'])/(2e6)/yolo_args['batch_size'] # convert to MB
             round_vals = (alice_com['rounds'] + bob_com['rounds'])/2
             
             com_costs[batch_idx] = cost
@@ -956,13 +956,30 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("[USAGE]: python3 {} experiment labels_folder_path imgs_folder_path ")
     elif len(sys.argv) == 4:
-        if sys.argv[1] == 'benchmark':
-            if torch.cuda.is_available():
+        # check device
+        if torch.cuda.is_available():
                 device = 'cuda'
                 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-            else:
-                device = 'cpu'
+        else:
+            device = 'cpu'
+            
+        # run correct experiment
+        if sys.argv[1] == 'benchmark':
             model_type_exps(
+                sys.argv[2],
+                sys.argv[3],
+                device=device,
+                debug=False
+            )
+        elif sys.argv[1] == 'batch_size':
+            batch_size_exps(
+                sys.argv[2],
+                sys.argv[3],
+                device=device,
+                debug=False
+            )
+        elif sys.argv[1] == 'img_size':
+            img_size_exps(
                 sys.argv[2],
                 sys.argv[3],
                 device=device,

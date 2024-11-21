@@ -37,16 +37,16 @@ import multiprocessing as mp
 # main stuff
 import os
 import sys
+import logging
+import traceback
+import pandas as pd
+import pickle
+import cv2
+import torch
+import numpy as np
+from tqdm import tqdm
 
 try: 
-    import logging
-    import traceback
-    import pandas as pd
-    import pickle
-    import cv2
-    import torch
-    import numpy as np
-    from tqdm import tqdm
     from driverdrowsiness.cryptodrowsy import multiproc_gpu_drowsy, _run_sec_drowsy_model # this one runs compactcnn
     from driverdrowsiness.models.crypten_compactcnn import CryptenCompactCNN
     from traffic_rule_violation.fastsec_yolo import multiproc_gpu, _run_sec_model # this one runs yolo
@@ -199,17 +199,15 @@ def read_im_frame(frame, img_size, stride=32):
     # no need to pass the original and new image sizes simultaneously
     return im_tensor
   
-def fetch_sim_vid_data(params, vid_folder=None, vid_file=None, debug=False, save_im=0):
+def fetch_sim_vid_data(params, vid_path=None, debug=False, save_im=0):
     '''
     read video data from a specified video file using methods from 
     https://learnopencv.com/reading-and-writing-videos-using-opencv/#read-video-from-file 
     '''
-    if vid_folder is None:
-      vid_folder = "../../Fully-Automated-red-light-Violation-Detection/videos/"
-    if vid_file is None: 
-      vid_file = "y2.mp4"
+    if vid_path is None:
+        vid_file = "../../Fully-Automated-red-light-Violation-Detection/videos/y2.mp4"
     
-    vid_capture = cv2.VideoCapture(f'{vid_folder}/{vid_file}')
+    vid_capture = cv2.VideoCapture(f'{vid_file}')
     
     saved_frames = 0
     n_frames = 0
@@ -302,7 +300,7 @@ def run_agents(
         'world_size':2,
         'img_size':eeg_size,
         'drowsy_mod':drowsy_mod_path,
-        'data_path':'driverdrowsiness/dev_work/test_features_labels/9-crypten_features.pth',
+        'data_path':'driverdrowsiness/dev_work/test_features_labels/9-drowsy_features.pth',
         'run_label':'cpu_compactcnn',
         'batch_size':314, # edit in the target funcs
         'device':'cpu', 
@@ -383,7 +381,7 @@ def run_agents(
     
     return experiment_agg_results
 
-def main(mp_lock, runs={'4-1':[4,1]}):
+def main(mp_lock, vid_path=None):
     # # load model parameters and such
     # eeg_size=(1,384)
     # drowsy_device = 'cpu'
@@ -391,34 +389,41 @@ def main(mp_lock, runs={'4-1':[4,1]}):
     # drowsy_mod = CryptenCompactCNN() # set arch
     # drowsy_mod.load_state_dict(torch.load(dw_path, map_location=drowsy_device)) # fake func - load weights
     
-    # im_size=(288,288)
-    # im_batch_size=4
-    # rlr_device = 'cuda'
+    
     # rlr_mod = torch.hub.load("ultralytics/yolov5", "yolov5n", force_reload=True, trust_repo=True)
     # rlr_mod.to(device=rlr_device) # send to the gpu
     
-    # vids = ['y2.mp4'] # only one video for now - maybe do more later??
-    # for i in range(len(vids)):
-    #     vid_data = fetch_sim_vid_data(params={'img_size':im_size, 'stride':rlr_mod.stride}, vid_file=vids[i])
-    #     vid_data = torch.split(vid_data,im_batch_size)
-    #     for j in range(len(vid_data)):
-    #         torch.save(vid_data[j], f"rlr_agent_src/vid_{i}_batch_{j}.pth")
+    if 'rlr_agent_src' not in os.listdir():
+        im_size=(288,288)
+        im_batch_size=4
+        rlr_device = 'cuda'
+        
+        os.mkdir('rlr_agent_src')
+        
+        vids = ['y2.mp4'] # only one video for now - maybe do more later??
+        for i in range(len(vids)):
+            vid_data = fetch_sim_vid_data(params={'img_size':im_size, 'stride':32}, vid_file=vids[i])
+            vid_data = torch.split(vid_data,im_batch_size)
+            for j in range(len(vid_data)):
+                torch.save(vid_data[j], f"rlr_agent_src/vid_{i}_batch_{j}.pth")
     
     res_file = 'debug_results'
     dw_path = "driverdrowsiness/pretrained/sub9/model.pth"
     yolo_path = 'yolov5n'
     rlr_device = 'cuda'
             
-    # runs = dict()
-    # n_total = [1, 2, 3, 5, 8, 12, 15]
-    # c_prop = [0.0, 0.25, 0.5, 0.75, 1.0]
-    # for n in n_total:
-    #     for p in c_prop: 
-    #         n_comp = int(n*p)
-    #         n_rlr = n - n_comp
-    #         if f'{n_comp}-{n_rlr}' in runs: continue
-    #         else: runs[f'{n_comp}-{n_rlr}'] = (n_comp, n_rlr)
-    runs={'4-1':[4,1]}
+    # set run values
+    runs = dict()
+    n_total = [1, 2, 3, 5, 8, 12, 15]
+    c_prop = [0.0, 0.25, 0.5, 0.75, 1.0]
+    for n in n_total:
+        for p in c_prop: 
+            n_comp = int(n*p)
+            n_rlr = n - n_comp
+            if f'{n_comp}-{n_rlr}' in runs: continue
+            else: runs[f'{n_comp}-{n_rlr}'] = (n_comp, n_rlr)
+    runs['4-1']=[4,1]
+    
     print(f"[INFO]: combs = {runs}")
     print(f"[INFO]: num combs = {len(runs)}")
     
@@ -449,8 +454,12 @@ def main(mp_lock, runs={'4-1':[4,1]}):
         if "crypten_tmp" in item: os.system(f"rm -rf experiments/{item}")
     
 if __name__ == "__main__":
+    import sys
     mp.log_to_stderr(logging.INFO)
     mp.set_start_method("spawn")
     load_lock = mp.Lock()
     
-    main(load_lock)
+    if len(sys.argv) < 2 and ('rlr_agent_src' not in os.listdir()):
+        print("[USAGE]: python3 {} path/to/input/video.mp4".format(sys.argv[0]))
+        exit()
+    main(load_lock, vid=sys.argv[1])

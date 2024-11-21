@@ -38,7 +38,9 @@ torch.manual_seed(0)
 """
 
 
-def run():
+def run(
+    save_torch_form = False
+):
 
     # load data from the file
     filename = r'data/dataset.mat'
@@ -94,8 +96,21 @@ def run():
         # form the testing data
         testindx = np.where(subIdx == i)[0]
         xtest = xdata[testindx]
+            
         x_test = xtest.reshape(xtest.shape[0], 1, channelnum, samplelength*sf)
         y_test = ydata[testindx]
+        
+        if save_torch_form:
+            xt_torch = torch.from_numpy(xtest)
+            yt_torch = torch.from_numpy(y_test)
+            f_x = "{}-drowsy_features.pth".format(i)
+            f_y = "{}-drowsy_labels.pth".format(i)
+            if f_x in 'dev_work/test_features_labels':
+                continue
+            else:
+                torch.save(xt_torch, "dev_work/test_features_labels/{}".format(f_x))
+                torch.save(yt_torch, "dev_work/test_features_labels/{}".format(f_y))
+            continue
 
         train = torch.utils.data.TensorDataset(
             torch.from_numpy(x_train), torch.from_numpy(y_train))
@@ -151,4 +166,4 @@ def run():
 
 
 if __name__ == '__main__':
-    run()
+    run(save_torch_form=True)

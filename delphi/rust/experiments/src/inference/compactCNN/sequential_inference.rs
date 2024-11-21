@@ -142,7 +142,7 @@ fn main() {
     // let plaintext: Vec<i64> = NpyData::from_bytes(&buf).unwrap().to_vec();
 
     let mut eeg_data: Vec<Array4<f64>> = Vec::new();
-    for i in 0..classes.len() {
+    for i in 0..num_samples {
         buf = vec![];
         std::fs::File::open(data_dir.join(Path::new(&format!("eeg_sample_{}.npy", i))))
             .unwrap()
