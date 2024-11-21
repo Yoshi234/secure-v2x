@@ -19,10 +19,14 @@ def run_2pc_yolo(args:dict):
     Load the torch hub yolov5 model of interest and 
     save results to the desired output folder
     '''
-    with args['load_lock']: # only one thread should be able to load at a time
+    if 'load_lock' in args:
+        with args['load_lock']: # only one thread should be able to load at a time
+            rlr_mod = torch.hub.load("ultralytics/yolov5", args['rlr_mod'], force_reload=True, trust_repo=True)
+            rlr_mod = rlr_mod.to(device=args['device'])
+        print(f"[INFO-{os.getpid()}]: Model loaded - running inference")
+    else: # attempt load here will probably fail
         rlr_mod = torch.hub.load("ultralytics/yolov5", args['rlr_mod'], force_reload=True, trust_repo=True)
         rlr_mod = rlr_mod.to(device=args['device'])
-    print(f"[INFO-{os.getpid()}]: Model loaded - running inference")
     
     crypten.init()
     dummy_input = torch.empty(args['batch_size'],3,*args['img_size'])

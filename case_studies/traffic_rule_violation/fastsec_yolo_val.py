@@ -4,7 +4,8 @@ Follows from the yolov5/val.py validation script. See
 https://github.com/ultralytics/yolov5/blob/master/val.py 
 Inference time implementation of Secure-RLR utilizes CrypTen
 running on a single GPU. Custom implementation of modules is 
-required in order to process YOLO in CrypTen. 
+required in order to use CrypTen primitives to privately 
+compute the YOLOv5 architecture
 '''
 
 # handle module and non-module import strategies
@@ -16,7 +17,7 @@ try:
     from .utils.metrics import box_iou, ap_per_class
     from tqdm import tqdm
     # scripts
-    from .crypten_detect import multiproc_gpu, _run_sec_model
+    from .fastsec_yolo_detect import multiproc_gpu, _run_sec_model
 except ImportError: 
     from utils.general import (
         cv2, non_max_suppression, scale_boxes, check_dataset, xywh2xyxy
@@ -24,7 +25,7 @@ except ImportError:
     from utils.augmentations import letterbox
     from utils.metrics import box_iou, ap_per_class
     from tqdm import tqdm
-    from crypten_detect import multiproc_gpu, _run_sec_model
+    from fastsec_yolo_detect import multiproc_gpu, _run_sec_model
     
 # utils
 import threading
@@ -51,8 +52,6 @@ import torch
 import numpy as np
 # from examples.multiprocess_launcher import MultiProcessLauncher
 import torchvision
-
-
 
 # NOT NECESSARY - DELETE AFTER VERIFYING THE FUNCTIONALITY OF VALIDATION
 # class img_info:
@@ -394,24 +393,8 @@ def run_val(
     print_net=False
 ):
     '''
-    NOTE: although the authors of CrypTen claim GPU support is 
-    provided, there is some computation over which we can't compute
-    computations on unencrypted module parameters (not trained weights)
-    and encrypted crypten cryptensors - this is an issue on the GPU 
-    in particular. When computing on the CPU, this issue does not appear
-    for some reason. 
-    
-    Takes as input the plaintext model, and runs validation on the 
-    COCO dataset for specified batch sizes. Ideally, all of the images in the dataset
-    should be split up into multiple folders, and batches of eval. be run on each 
-    folder of the dataset.
-    
-    NOTE: the aspect ratio of images NEEDS to be maintained. Adjusting the 
-    aspect ratio of the image can have drastic consequences for the output
-    bounding box detections. So, we need to load in all the images, and group
-    them by their aspect ratios. If they are close enough, they can be 
-    computed together. Otherwise, they need to be placed in a separate 
-    compute batch. 
+    Takes as input the yolov5 model of choice, and runs validation on the 
+    COCO128 dataset for specified batch sizes. 
     '''
     if debug: 
         print(f"[INFO]: environ --- {os.getenv('CUDA_VISIBLE_DEVICES')}")
@@ -965,29 +948,46 @@ def test_single():
     results.to_csv("experiments/batched_val/single_eval.csv")
     
 if __name__ == "__main__":
+    import sys
     import pickle as pkl
     import multiprocessing as mp
     mp.set_start_method("spawn") # set thread start method for crypten     
-    os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
-    stats = run_val(
-        exp_folder='gpu_exps', 
-        img_size=(288,288), 
-        debug=True,
-        lbs_folder='/mnt/nvme1n1p1/data/coco128/coco128/labels/train2017',
-        imgs_folder='/mnt/nvme1n1p1/data/coco128/coco128/images/train2017',
-        device='cuda',
-        model_name='yolov5n',
-        plain=False,
-        results_name='test_gpu_environ',
-        num_batches=1,
-        get_stats=True,
-        batch_size=1,
-        print_net=True
-    )
-    print("[INFO]: ... STATS ...")
-    with open("experiments/gpu_exps/acc_info.pkl", 'wb') as f:
-        pkl.dump(stats, f)
-    print('[INFO]: stats saved ...')
+    
+    if len(sys.argv) < 2:
+        print("[USAGE]: python3 {} experiment labels_folder_path imgs_folder_path ")
+    elif len(sys.argv) == 4:
+        if sys.argv[1] == 'benchmark':
+            if torch.cuda.is_available():
+                device = 'cuda'
+                os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
+            else:
+                device = 'cpu'
+            model_type_exps(
+                sys.argv[2],
+                sys.argv[3],
+                device=device,
+                debug=False
+            )
+            
+    # stats = run_val(
+    #     exp_folder='gpu_exps', 
+    #     img_size=(288,288), 
+    #     debug=True,
+    #     lbs_folder='/mnt/nvme1n1p1/data/coco128/coco128/labels/train2017',
+    #     imgs_folder='/mnt/nvme1n1p1/data/coco128/coco128/images/train2017',
+    #     device='cuda',
+    #     model_name='yolov5n',
+    #     plain=False,
+    #     results_name='test_gpu_environ',
+    #     num_batches=1,
+    #     get_stats=True,
+    #     batch_size=1,
+    #     print_net=True
+    # )
+    # print("[INFO]: ... STATS ...")
+    # with open("experiments/gpu_exps/acc_info.pkl", 'wb') as f:
+    #     pkl.dump(stats, f)
+    # print('[INFO]: stats saved ...')
     
     # const_params = {"batch_size":1, "img_size":(1000,300), 'folder':'model_type_exps', "num_batches":32}
     # faster_rcnn_val(

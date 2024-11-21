@@ -47,15 +47,14 @@ try:
     import torch
     import numpy as np
     from tqdm import tqdm
-    from driverdrowsiness.cryptodrowsy import multiproc_gpu_drowsy, _run_sec_drowsy_model  # this one runs compactcnn
+    from driverdrowsiness.cryptodrowsy import multiproc_gpu_drowsy, _run_sec_drowsy_model # this one runs compactcnn
     from driverdrowsiness.models.crypten_compactcnn import CryptenCompactCNN
-    from traffic_rule_violation.fastsec_yolo import multiproc_gpu, _run_sec_model        # this one runs yolo
+    from traffic_rule_violation.fastsec_yolo import multiproc_gpu, _run_sec_model # this one runs yolo
     from traffic_rule_violation.utils.augmentations import letterbox
     from traffic_rule_violation.utils.general import non_max_suppression
 except: 
     print("[ERROR]: import error occurred for one of the above functions")
     print("[ERROR]: file path = {}".format(os.getcwd()))
-
 
 def cryptodrowsy(call_id:int, params:dict, queue):
     '''
@@ -112,8 +111,7 @@ def cryptodrowsy(call_id:int, params:dict, queue):
     # every run has its own folder for the crypten tmp stuff
     # in each run, there are a bunch
     
-  
-def fastsec_yolo(call_id:int, params:dict, queue, debug=True):
+def fastsec_yolo(call_id:int, params:dict, queue, debug=True, ret_inf=False):
     '''
     pseudocode: 
     1. set up environment for the subprocess
@@ -147,7 +145,7 @@ def fastsec_yolo(call_id:int, params:dict, queue, debug=True):
         if debug: print("[DEBUG]: checkpoint 3 - about to start run")
         
         # nah, just do the first 32 images
-        multiproc_gpu(_run_sec_model, run_val=call_id, args=params)
+        multiproc_gpu(_run_sec_model, run_val=call_id, args=params, agent=True)
         
         if debug: print("[DEBUG]: checkpoint 4 - finished run")
         
@@ -174,6 +172,9 @@ def fastsec_yolo(call_id:int, params:dict, queue, debug=True):
             max_det=params['max_det']
         )
         n_preds = np.array([len(pred) for pred in preds]).mean()
+        if ret_inf: # return prediction matrix if desired
+            return preds
+        
         queue.put(pd.DataFrame({"n_dets":[n_preds], # should be a list
                                 "com_cost":com_costs,
                                 "round_nums":round_nums,

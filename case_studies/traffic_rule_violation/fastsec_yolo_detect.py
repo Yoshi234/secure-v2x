@@ -87,7 +87,7 @@ def secure_run(
     conf_thres=0.25,                    # confidence threshold
     iou_thres=0.45,                     # NMS IOU threshold for elminating bbs
     max_det=1000,                       # maximum detections per image
-    device="1",                         # cuda or cpu device to run model on
+    device="cuda",                         # cuda or cpu device to run model on
     save_res=True,                      # bool indicate save formatted img or not
     secure=True,                        # bool indicating to run secure implementation of model
     hub=False,                          # bool indicating to use torch.hub.load model
@@ -186,26 +186,6 @@ def secure_run(
         pred, start, end = res_pkl # should be a list of this format
         
     elif secure and hub:
-        # _ = encrypt_run(
-        #     plaintext_model=hub_model,
-        #     dat_path="{}/{}.pth".format(cryp_src, img_file.split(".")[0]),
-        #     imgsz=imgsz,
-        #     run=run_num
-        # )
-        
-        # # wait on the results to load then open them
-        # folder = "experiments/sec_outs"
-        # results_file = "run_{}.pkl".format(run_num)
-        # incomplete = True
-        # while incomplete:
-        #     if results_file in os.listdir(folder): incomplete=False
-        #     else: 
-        #         print("[INFO-main]: Waiting on Exec.")
-        #         time.sleep(30)
-                
-        # with open("experiments/sec_outs/run_{}.pkl".format(run_num), 'rb') as f:
-        #     res_pkl = pickle.load(f)
-        # pred, start, end = res_pkl # should be a list of this format
         yolo_args = {
             "world_size":2,
             "img_size":imgsz,
@@ -265,17 +245,6 @@ def secure_run(
         with open("experiments/crypten_tmp/comm_tmp_0.pkl", 'rb') as f:
             comm_cost = pickle.load(f)
             print('[INFO]: communication expenditure {}'.format(comm_cost))
-    # print("[INFO]: output shape = {}".format(pred.shape))
-    # print("[DEBUG]: raw prediction output={} - time={}".format(len(pred), end-start))
-    # print("\t[DEBUG]: output [0]:\n\t {}\n\t (shape)={}".format(pred[0], pred[0].shape))
-    # print("\t[DEBUG]: output [1]:\n\t (len)={}".format(len(pred[1])))
-    # print("\t\t[DEBUG]: output [1][0]:\n\t {}\n\t (shape)={}".format(pred[1][0], pred[1][0].shape))
-    # print("\t\t[DEBUG]: output [1][1]:\n\t {}\n\t (shape)={}".format(pred[1][1], pred[1][1].shape))
-    # print("\t\t[DEBUG]: output [1][2]:\n\t {}\n\t (shape)={}".format(pred[1][2], pred[1][2].shape))
-    
-    # TODO perform NMS on the output.
-    
-    # TODO add bounding box to the image and save it for viewing / analysis purposes
     
     return
 
@@ -366,7 +335,30 @@ def encrypt_run(plaintext_model, dat_path, imgsz, run=0):
         with open(pkl_str, 'wb') as pkl_file:
             pickle.dump([pred_dec, start, end], pkl_file)
             
-def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_name='bus.jpg'):
+def sample_proc_output(
+    imgsz:tuple=(640,640), 
+    folder="sec_outs", 
+    run_val=0, 
+    img_name='bus.jpg',
+    file_source="source/plaintext_source",
+    debug=False
+):
+    '''
+    Generates an image visual output of the bounding box detection
+    Args:
+    - imgsz -------- tuple (x,x) of the img size - should match the image
+      size specified for secure inference
+    - folder ------- folder from which to load pickled results of secure inference
+    - run_val ------ run label for the .pkl file storing the output from secure
+      inference
+    - img_name ----- the title of the plaintext image to map output bounding
+      boxes onto
+    - file_source -- the folder containing the plaintext image of interest
+    - debug -------- a boolean value indicating whether or not debug information
+      should be output while running this function
+    Returns: 
+    - None
+    '''
     with open("experiments/{}/run_{}.pkl".format(folder, run_val), 'rb') as f:
         res_pkl = pickle.load(f)
     pred, start, end = res_pkl # should be a list of this format
@@ -382,11 +374,8 @@ def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_
     # load model with names
     hub_model = torch.hub.load('ultralytics/yolov5', 'yolov5s', force_reload=True, trust_repo=True)
     hub_names = hub_model.names
-    
-    # print("[INFO]: Type of the hub loaded model (which detection class) = {}".format(type(hub_model)))
-    # print("[INFO]: Attributes of the loaded object = {}".format(dir(hub_model)))
-    
-    im0 = cv2.imread("{}/{}".format("source/plaintext_source", img_name))
+        
+    im0 = cv2.imread("{}/{}".format(file_source, img_name))
     im0_copy = im0.copy()
     
     im = letterbox(im0, imgsz, stride=32, auto=False, scaleFill=True)[0]
@@ -396,13 +385,15 @@ def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_
     annotator = Annotator(im0_copy, line_width=3, example=str(hub_names))
     
     # scale the image to the correct size
-    print("[DEBUG]: pred[:,:4] = {}".format(pred[:,:4]))
-    print("[DEBUG]: im.shape[2:] = {}".format(im.shape[2:]))
-    print("[DEBUG]: im0.shape = {}".format(im0.shape))
-    print("[DEBUG]: im.shape = {}".format(im.shape))
+    if debug:
+        print("[DEBUG]: pred[:,:4] = {}".format(pred[:,:4]))
+        print("[DEBUG]: im.shape[2:] = {}".format(im.shape[2:]))
+        print("[DEBUG]: im0.shape = {}".format(im0.shape))
+        print("[DEBUG]: im.shape = {}".format(im.shape))
 
-    print("[DEBUG]: im.shape[1:] = {}".format(im.shape[1:]))
-    print(f'[INFO]: im.shape[1:] = {im.shape[1:]} | im0.shape = {im0.shape}')
+        print("[DEBUG]: im.shape[1:] = {}".format(im.shape[1:]))
+        print(f'[INFO]: im.shape[1:] = {im.shape[1:]} | im0.shape = {im0.shape}')
+        
     pred[:,:4] = scale_boxes(im.shape[1:], pred[:,:4], im0.shape).round()
 
     # class filter for the thing
@@ -410,21 +401,21 @@ def sample_proc_output(imgsz:tuple=(640,640), folder="sec_outs", run_val=0, img_
     for *xyxy, conf, cls in reversed(pred):
         c = int(cls)
         if not c in select_classes: continue # skip non vehicles
-        # confidence = float(conf)
-        # confidence_str = f"{confidence:.2f}"
         label = f'{hub_names[c]} {conf:.2f}'
-
         annotator.box_label(xyxy, label, color=colors(c, True))
     
     img_title = img_name.split(".")[0]
+    
+    if "img_visuals" not in os.listdir("experiments"):
+        os.mkdir("experiments/img_visuals")
         
     cv2.imwrite("experiments/img_visuals/{}_boxes{}.jpg".format(img_title,run_val), im0_copy)
-    
     print("[INFO]: Inference Duration = {} seconds".format(end-start))
       
 # NOTE: The image size dimensions MUST be divisible
 # by 32 or the execution will fail due to incorrect 
 # sizes  
+
 def main():
     device='cpu'
     img = 'walkway.png'
